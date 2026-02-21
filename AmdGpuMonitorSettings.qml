@@ -5,7 +5,7 @@ import qs.Widgets
 
 PluginSettings {
     id: root
-    pluginId: "amdGpuMonitor"
+    pluginId: "amdGpuMonitorRevive"
 
     StyledText {
         width: parent.width
@@ -35,10 +35,10 @@ PluginSettings {
         label: "Popout Style"
         description: "Visual style for the popout panel"
         options: [
-            { label: "Default", value: "default" },
+            { label: "Old", value: "old" },
             { label: "Alternative", value: "alt" },
             { label: "DMS", value: "dms" }
         ]
-        defaultValue: "default"
+        defaultValue: "alt"
     }
 }

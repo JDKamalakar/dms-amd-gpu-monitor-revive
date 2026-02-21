@@ -1,9 +1,9 @@
 title: AMD GPU Monitor
 description: Real-time AMD GPU monitoring for DankMaterialShell
 theme: jekyll-theme-cayman
-repository: navidagz/dms-amd-gpu-monitor
-baseurl: "/dms-amd-gpu-monitor"
-url: "https://navidagz.github.io"
+repository: JDKamalakar/
+baseurl: "/dms-amd-gpu-monitor-revive"
+url: "https://github.com/JDKamalakar"
 
 # Build settings
 markdown: kramdown
@@ -25,7 +25,7 @@ exclude:
   - vendor
   - .git
   - .gitignore
-  - AmdGpuMoniorWidget.qml
+  - AmdGpuMonitorWidget.qml
   - plugin.json
 
 # Navigation
