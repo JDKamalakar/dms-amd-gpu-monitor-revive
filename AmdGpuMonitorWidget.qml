@@ -630,7 +630,7 @@ PluginComponent {
                     }
                 }
             }
-            
+
             // Process list section
             Rectangle {
                 visible: root.gfxUsage > 0 || root.memUsage > 0 || root.mediaUsage > 0
