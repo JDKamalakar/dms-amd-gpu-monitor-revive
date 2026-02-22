@@ -37,7 +37,8 @@ PluginSettings {
         options: [
             { label: "Legacy", value: "legacy" },
             { label: "Alternative", value: "alt" },
-            { label: "DMS", value: "dms" }
+            { label: "DMS", value: "dms" },
+            { label: "DMS Extended", value: "dmsExtended" }
         ]
         defaultValue: "alt"
     }

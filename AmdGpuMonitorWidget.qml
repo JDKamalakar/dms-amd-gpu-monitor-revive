@@ -119,42 +119,17 @@ PluginComponent {
     horizontalBarPill: Component {
         Row {
             spacing: Theme.spacingS
-
-            DankIcon {
-                name: "dashboard"
-                size: root.iconSize
-                color: Theme.widgetIconColor
-                anchors.verticalCenter: parent.verticalCenter
-            }
-
+            DankIcon { name: "dashboard"; size: root.iconSize; color: Theme.widgetIconColor; anchors.verticalCenter: parent.verticalCenter }
             Item {
                 anchors.verticalCenter: parent.verticalCenter
                 implicitWidth: root.minimumWidth ? Math.max(textBaseline.width, gpuText.paintedWidth) : gpuText.paintedWidth
                 implicitHeight: gpuText.implicitHeight
-                width: implicitWidth
-                height: implicitHeight
-
-                Behavior on width {
-                    NumberAnimation {
-                        duration: Theme.shortDuration
-                        easing.type: Easing.OutCubic
-                    }
-                }
-
-                StyledTextMetrics {
-                    id: textBaseline
-                    font.pixelSize: Theme.fontSizeSmall
-                    text: "88% | 8.8GiB"
-                }
-
+                width: implicitWidth; height: implicitHeight
+                StyledTextMetrics { id: textBaseline; font.pixelSize: Theme.fontSizeSmall; text: "88% | 8.8GiB" }
                 StyledText {
-                    id: gpuText
+                    id: gpuText; anchors.fill: parent; font.pixelSize: Theme.fontSizeSmall; color: Theme.widgetTextColor
                     text: `${root.gpuUsage.toFixed(0)}% | ${(root.vramUsed / 1024).toFixed(1)}GiB`
-                    font.pixelSize: Theme.fontSizeSmall
-                    color: Theme.widgetTextColor
-                    anchors.fill: parent
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
+                    horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter
                 }
             }
         }
@@ -184,7 +159,8 @@ PluginComponent {
     popoutContent: Component {
         PopoutComponent {
             id: popout
-            headerText: root.gpuName
+            
+            //headerText: root.gpuName
 
             Loader {
                 width: parent.width
@@ -193,6 +169,7 @@ PluginComponent {
                         case "alt": return altStyleContent
                         case "dms": return dmsStyleContent
                         case "legacy": return legacyStyleContent
+                        case "dmsExtended": return dmsExtendedStyleContent
                     }
                 }
             }
@@ -206,6 +183,12 @@ PluginComponent {
         Column {
             width: parent.width
             spacing: Theme.spacingL
+
+            Row {
+                width: parent.width; spacing: 8; height: 24
+                DankIcon { name: "memory"; size: 18; color: Theme.primary; anchors.verticalCenter: parent.verticalCenter }
+                StyledText { text: root.gpuName; font.pixelSize: 18; font.bold: true; color: Theme.surfaceText; anchors.verticalCenter: parent.verticalCenter }
+            }
 
             // GPU Usage
             Column {
@@ -470,6 +453,12 @@ PluginComponent {
         Column {
             width: parent.width
             spacing: Theme.spacingM
+
+            Row {
+                width: parent.width; spacing: 8; height: 24
+                DankIcon { name: "memory"; size: 18; color: Theme.primary; anchors.verticalCenter: parent.verticalCenter }
+                StyledText { text: root.gpuName; font.pixelSize: 18; font.bold: true; color: Theme.surfaceText; anchors.verticalCenter: parent.verticalCenter }
+            }
 
             // Main stats
             Row {
@@ -780,6 +769,12 @@ PluginComponent {
             width: parent.width
             spacing: Theme.spacingM
 
+            Row {
+                width: parent.width; spacing: 8; height: 24
+                DankIcon { name: "memory"; size: 18; color: Theme.primary; anchors.verticalCenter: parent.verticalCenter }
+                StyledText { text: root.gpuName; font.pixelSize: 18; font.bold: true; color: Theme.surfaceText; anchors.verticalCenter: parent.verticalCenter }
+            }
+
             // Gauges row
             Item {
                 width: parent.width
@@ -1087,6 +1082,341 @@ PluginComponent {
             }
         }
     }
+
+
+    // --- DMS EXTENDED STYLE ---
+    Component {
+        id: dmsExtendedStyleContent
+        Column {
+            width: parent.width
+            spacing: Theme.spacingM
+
+            // 1. FIRST LINE: DASHBOARD ICON, TITLE, TABS, SEARCH BAR
+            Row {
+                id: firstLine
+                width: parent.width; height: 32; spacing: 8
+
+                DankIcon { name: "dashboard"; size: 18; anchors.verticalCenter: parent.verticalCenter; color: Theme.primary }
+                StyledText { text: "Processes"; font.pixelSize: 14; font.bold: true; anchors.verticalCenter: parent.verticalCenter; color: Theme.surfaceText }
+
+                // Tabs
+                Row {
+                    id: tabsRow; spacing: 4; anchors.verticalCenter: parent.verticalCenter
+                    Rectangle { width: 40; height: 24; radius: 12; color: Theme.primary; StyledText { text: "All"; anchors.centerIn: parent; color: "black"; font.pixelSize: 10; font.bold: true } }
+                    Rectangle { width: 45; height: 24; radius: 12; color: Theme.surfaceContainerHighest; StyledText { text: "User"; anchors.centerIn: parent; font.pixelSize: 10 } }
+                    Rectangle { width: 55; height: 24; radius: 12; color: Theme.surfaceContainerHighest; StyledText { text: "System"; anchors.centerIn: parent; font.pixelSize: 10 } }
+                }
+
+                // Search Bar filling remaining width
+                Rectangle {
+                    height: 28; radius: 14; color: "transparent"
+                    border.color: Theme.surfaceContainerHighest; border.width: 1
+                    width: parent.width - (tabsRow.x + tabsRow.width + 16)
+                    anchors.verticalCenter: parent.verticalCenter
+                    
+                    Row {
+                        anchors.fill: parent; anchors.leftMargin: 10; spacing: 6
+                        DankIcon { name: "search"; size: 14; color: Theme.surfaceVariantText; anchors.verticalCenter: parent.verticalCenter }
+                        TextInput {
+                            anchors.fill: parent; verticalAlignment: TextInput.AlignVCenter
+                            color: Theme.surfaceText; font.pixelSize: 11; leftPadding: 22
+                            onTextChanged: root.searchText = text
+                        }
+                    }
+                }
+            }
+
+            // 2. SECOND LINE: SQUARE GPU ICON, GPU TEXT, CIRCULAR GAUGES
+            Item {
+                width: parent.width; height: 80
+                Row {
+                    anchors.left: parent.left; anchors.verticalCenter: parent.verticalCenter; spacing: 12
+                    
+                    // Large GPU Icon (Square size matching 2 lines of text)
+                    Rectangle {
+                        width: 58; height: 58; radius: 12; color: Theme.surfaceContainerHighest
+                        DankIcon { name: "developer_board"; size: 38; anchors.centerIn: parent; color: Theme.primary }
+                    }
+
+                    Column {
+                        anchors.verticalCenter: parent.verticalCenter; spacing: -2
+                        StyledText { text: "GPU"; font.pixelSize: 24; font.bold: true; color: Theme.surfaceText; transform: Translate { y: 2 } }
+                        StyledText { text: root.gpuName; font.pixelSize: 11; color: Theme.surfaceVariantText; font.weight: Font.Medium }
+                    }
+                }
+
+                // 3 Circular Gauges pinned to right side
+                Row {
+                    anchors.right: parent.right; anchors.verticalCenter: parent.verticalCenter; spacing: 10
+                    CircleGauge { width: 75; height: 75; value: root.gpuUsage/100; label: root.gpuUsage.toFixed(0) + "%"; sublabel: "GPU"; detail: root.temperature + "°"; accentColor: root.gpuUsage > 80 ? Theme.tempDanger : Theme.primary }
+                    CircleGauge { width: 75; height: 75; value: root.vramPercent/100; label: (root.vramUsed/1024).toFixed(1) + "G"; sublabel: "VRAM"; detail: root.powerUsage + "W"; accentColor: Theme.secondary }
+                    CircleGauge { width: 75; height: 75; value: root.temperature/100; label: root.temperature + "°"; sublabel: "TEMP"; detail: root.powerUsage + "W"; accentColor: Theme.tempWarning }
+                }
+            }
+
+            // Engine activity section
+            Rectangle {
+                visible: root.gfxUsage > 0 || root.memUsage > 0 || root.mediaUsage > 0
+                width: parent.width
+                height: engineContent.height + Theme.spacingM * 2
+                radius: Theme.cornerRadius
+                color: Theme.withAlpha(Theme.surfaceContainerHigh, Theme.popupTransparency)
+
+                Column {
+                    id: engineContent
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.top: parent.top
+                    anchors.margins: Theme.spacingM
+                    spacing: Theme.spacingS
+
+                    Row {
+                        spacing: Theme.spacingS
+
+                        DankIcon {
+                            name: "speed"
+                            size: Theme.fontSizeSmall
+                            color: Theme.surfaceVariantText
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+
+                        StyledText {
+                            text: "Engine Activity"
+                            font.pixelSize: Theme.fontSizeSmall
+                            font.weight: Font.Medium
+                            color: Theme.surfaceVariantText
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+                    }
+
+                    EngineBar {
+                        width: parent.width
+                        label: "GFX"
+                        value: root.gfxUsage
+                        barColor: Theme.primary
+                    }
+
+                    EngineBar {
+                        width: parent.width
+                        label: "MEM"
+                        value: root.memUsage
+                        barColor: Theme.secondary
+                    }
+
+                    EngineBar {
+                        width: parent.width
+                        label: "Media"
+                        value: root.mediaUsage
+                        barColor: Theme.info
+                    }
+                }
+            }
+
+            // Process list section
+            Rectangle {
+                visible: root.gfxUsage > 0 || root.memUsage > 0 || root.mediaUsage > 0
+                width: parent.width
+                height: processContent.height + Theme.spacingM * 2
+                radius: Theme.cornerRadius
+                color: Theme.withAlpha(Theme.surfaceContainerHigh, Theme.popupTransparency)
+
+                Column {
+                    id: processContent
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.top: parent.top
+                    anchors.margins: Theme.spacingM
+                    spacing: Theme.spacingS
+
+                    Row {
+                        spacing: Theme.spacingS
+
+                        DankIcon {
+                            name: "apps"
+                            size: Theme.fontSizeSmall
+                            color: Theme.surfaceVariantText
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+
+                        StyledText {
+                            text: `GPU Processes (${root.processes.length})`
+                            font.pixelSize: Theme.fontSizeSmall
+                            font.weight: Font.Medium
+                            color: Theme.surfaceVariantText
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+                    }
+
+                    DankListView {
+                        width: parent.width
+                        height: Math.min(contentHeight, 220)
+                        model: root.processes
+                        spacing: 2
+                        clip: true
+
+                        delegate: Rectangle {
+                            width: ListView.view.width
+                            height: 44
+                            radius: Theme.cornerRadius
+                            color: procMouseArea.containsMouse
+                                ? Qt.rgba(Theme.primary.r, Theme.primary.g, Theme.primary.b, 0.06)
+                                : "transparent"
+                            border.color: procMouseArea.containsMouse
+                                ? Qt.rgba(Theme.primary.r, Theme.primary.g, Theme.primary.b, 0.12)
+                                : "transparent"
+                            border.width: 1
+
+                            MouseArea {
+                                id: procMouseArea
+                                anchors.fill: parent
+                                hoverEnabled: true
+                            }
+
+                            Row {
+                                anchors.fill: parent
+                                anchors.leftMargin: Theme.spacingS
+                                anchors.rightMargin: Theme.spacingS
+                                spacing: Theme.spacingS
+
+                                // Process name column
+                                Item {
+                                    width: parent.width - vramBadge.width - gfxBadge.width - cpuBadge.width - Theme.spacingS * 3
+                                    height: parent.height
+
+                                    Row {
+                                        anchors.left: parent.left
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        spacing: Theme.spacingS
+
+                                        DankIcon {
+                                            name: "terminal"
+                                            size: Theme.iconSize - 4
+                                            color: Theme.surfaceText
+                                            opacity: 0.8
+                                            anchors.verticalCenter: parent.verticalCenter
+                                        }
+
+                                        Column {
+                                            anchors.verticalCenter: parent.verticalCenter
+                                            spacing: 2
+
+                                            StyledText {
+                                                text: modelData.name
+                                                font.pixelSize: Theme.fontSizeSmall
+                                                font.weight: Font.Medium
+                                                color: Theme.surfaceText
+                                                elide: Text.ElideRight
+                                                width: Math.min(implicitWidth, 120)
+                                            }
+
+                                            StyledText {
+                                                text: `PID: ${modelData.pid}`
+                                                font.pixelSize: Theme.fontSizeSmall - 2
+                                                color: Theme.surfaceVariantText
+                                            }
+                                        }
+                                    }
+                                }
+
+                                // VRAM badge
+                                Rectangle {
+                                    id: vramBadge
+                                    width: 95
+                                    height: 24
+                                    radius: Theme.cornerRadius
+                                    color: Qt.rgba(Theme.primary.r, Theme.primary.g, Theme.primary.b, 0.15)
+                                    anchors.verticalCenter: parent.verticalCenter
+
+                                    Row {
+                                        anchors.centerIn: parent
+                                        spacing: 4
+
+                                        DankIcon {
+                                            name: "memory"
+                                            size: 12
+                                            color: Theme.primary
+                                            anchors.verticalCenter: parent.verticalCenter
+                                        }
+
+                                        StyledText {
+                                            text: `${modelData.vram} ${modelData.vramUnit}`
+                                            font.pixelSize: Theme.fontSizeSmall - 1
+                                            font.weight: Font.Bold
+                                            color: Theme.primary
+                                            anchors.verticalCenter: parent.verticalCenter
+                                        }
+                                    }
+                                }
+
+                                // GFX badge
+                                Rectangle {
+                                    id: gfxBadge
+                                    width: 64
+                                    height: 24
+                                    radius: Theme.cornerRadius
+                                    color: modelData.gfx > 50
+                                        ? Qt.rgba(Theme.warning.r, Theme.warning.g, Theme.warning.b, 0.12)
+                                        : Qt.rgba(Theme.surfaceText.r, Theme.surfaceText.g, Theme.surfaceText.b, 0.06)
+                                    anchors.verticalCenter: parent.verticalCenter
+
+                                    Row {
+                                        anchors.centerIn: parent
+                                        spacing: 4
+
+                                        DankIcon {
+                                            name: "speed"
+                                            size: 12
+                                            color: modelData.gfx > 50 ? Theme.warning : Theme.surfaceText
+                                            anchors.verticalCenter: parent.verticalCenter
+                                        }
+
+                                        StyledText {
+                                            text: modelData.gfx > 0 ? `${modelData.gfx}%` : "—"
+                                            font.pixelSize: Theme.fontSizeSmall - 1
+                                            font.weight: Font.Bold
+                                            color: modelData.gfx > 50 ? Theme.warning : Theme.surfaceText
+                                            anchors.verticalCenter: parent.verticalCenter
+                                        }
+                                    }
+                                }
+
+                                // CPU badge
+                                Rectangle {
+                                    id: cpuBadge
+                                    width: 64
+                                    height: 24
+                                    radius: Theme.cornerRadius
+                                    color: Qt.rgba(Theme.surfaceText.r, Theme.surfaceText.g, Theme.surfaceText.b, 0.06)
+                                    anchors.verticalCenter: parent.verticalCenter
+
+                                    Row {
+                                        anchors.centerIn: parent
+                                        spacing: 4
+
+                                        DankIcon {
+                                            name: "developer_board"
+                                            size: 12
+                                            color: Theme.surfaceVariantText
+                                            anchors.verticalCenter: parent.verticalCenter
+                                        }
+
+                                        StyledText {
+                                            text: modelData.cpu > 0 ? `${modelData.cpu}%` : "—"
+                                            font.pixelSize: Theme.fontSizeSmall - 1
+                                            font.weight: Font.Bold
+                                            color: Theme.surfaceVariantText
+                                            anchors.verticalCenter: parent.verticalCenter
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    //----
 
     // CircleGauge component (matching ProcessListPopout style)
     component CircleGauge: Item {
