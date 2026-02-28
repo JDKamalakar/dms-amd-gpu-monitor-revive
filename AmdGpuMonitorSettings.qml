@@ -40,6 +40,6 @@ PluginSettings {
             { label: "DMS", value: "dms" },
             { label: "DMS Extended", value: "dmsExtended" }
         ]
-        defaultValue: "alt"
+        defaultValue: "dmsExtended"
     }
 }
