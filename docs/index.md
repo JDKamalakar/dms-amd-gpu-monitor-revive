@@ -31,8 +31,8 @@ AMD GPU Monitor tracks:
 
 ## Quick Links
 
-- [GitHub Repository](https://github.com/navidagz/dms-amd-gpu-monitor)
-- [Report an Issue](https://github.com/navidagz/dms-amd-gpu-monitor/issues)
+- [GitHub Repository](https://github.com/JDKamalakar/dms-amd-gpu-monitor-revive)
+- [Report an Issue](https://github.com/JDKamalakar/dms-amd-gpu-monitor-revive/issues)
 - [DankMaterialShell](https://github.com/DankMaterialShell)
 
 ## Features at a Glance

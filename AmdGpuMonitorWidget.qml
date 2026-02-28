@@ -1185,60 +1185,54 @@ PluginComponent {
     }
 
 
-    // ==========================================
-    // DMS EXTENDED STYLE (Full Width & Native)
+// ==========================================
+    // DMS EXTENDED STYLE (Advanced Dashboard)
     // ==========================================
     Component {
         id: dmsExtendedStyleContent
 
         Column {
             width: parent.width
-            spacing: Theme.spacingM
+            spacing: Theme.spacingL
 
-            // 1. FIRST LINE: TITLE, FILTER CHIPS, SEARCH BAR
+            // 1. TOP HEADER: TITLE, FILTER PILLS, SEARCH BAR
             Item {
-                id: firstLine
                 width: parent.width
-                height: 36
+                height: 32
 
                 Row {
                     id: leftControls
+                    height: parent.height
                     anchors.left: parent.left
                     anchors.verticalCenter: parent.verticalCenter
                     spacing: Theme.spacingL
 
                     Row {
+                        height: parent.height
                         anchors.verticalCenter: parent.verticalCenter
                         spacing: Theme.spacingS
-                        
-                        DankIcon { name: "apps"; size: 20; color: Theme.primary; anchors.verticalCenter: parent.verticalCenter }
-                        StyledText { text: "Processes"; font.pixelSize: 16; font.bold: true; color: Theme.surfaceText; anchors.verticalCenter: parent.verticalCenter }
+                        DankIcon { name: "apps"; size: 22; color: Theme.primary; anchors.verticalCenter: parent.verticalCenter }
+                        StyledText { text: "Processes"; font.pixelSize: 18; font.weight: Font.Bold; color: Theme.surfaceText; anchors.verticalCenter: parent.verticalCenter }
                     }
 
-                    // Native Button Group
                     DankButtonGroup {
                         id: processFilters
                         anchors.verticalCenter: parent.verticalCenter
-                        
-                        // FIX 1: Width increased to 240 so it never wraps/stacks
-                        width: 240 
-                        buttonHeight: 28 
+                        width: 220 
+                        buttonHeight: 32 
                         checkEnabled: false 
-                        
                         model: ["All", "User", "System"]
                         currentIndex: 0
                         selectionMode: "single"
-                        
                         onSelectionChanged: function(index, selected) {
                             if (selected) {
                                 processFilters.currentIndex = index;
-                                processListView.filterMode = index;
+                                processSection.filterMode = index;
                             }
                         }
                     }
                 }
 
-                // Native Search Bar seamlessly filling the remaining space
                 DankTextField {
                     anchors.left: leftControls.right
                     anchors.leftMargin: Theme.spacingM
@@ -1246,41 +1240,76 @@ PluginComponent {
                     anchors.verticalCenter: parent.verticalCenter
                     height: 32
                     placeholderText: "Search processes or PIDs..."
-                    
-                    onTextChanged: processListView.searchText = text
+                    onTextChanged: processSection.searchText = text
                 }
             }
 
-            // 2. SECOND LINE: SQUARE GPU ICON, TEXT, CIRCULAR GAUGES
+            // 2. HERO CARD & GAUGES
             Item {
-                width: parent.width; height: 80
+                width: parent.width
+                height: 95 
                 
                 Row {
-                    anchors.left: parent.left; anchors.verticalCenter: parent.verticalCenter; spacing: 12
+                    anchors.left: parent.left
+                    anchors.verticalCenter: parent.verticalCenter
+                    spacing: Theme.spacingL
                     
                     Rectangle {
-                        width: 58; height: 58; radius: 12
-                        color: Theme.withAlpha(Theme.primary, 0.2) 
+                        width: 76; height: 76; radius: 18 
+                        color: Theme.withAlpha(Theme.primary, 0.15) 
                         DankIcon { name: "developer_board"; size: 38; anchors.centerIn: parent; color: Theme.primary }
                     }
 
                     Column {
-                        anchors.verticalCenter: parent.verticalCenter; spacing: -2
-                        StyledText { text: "GPU"; font.pixelSize: 24; font.bold: true; color: Theme.surfaceText; transform: Translate { y: 2 } }
-                        StyledText { text: root.gpuName; font.pixelSize: 11; color: Theme.surfaceVariantText; font.weight: Font.Medium }
+                        anchors.verticalCenter: parent.verticalCenter
+                        spacing: 2
+                        StyledText { text: "GPU"; font.pixelSize: 24; font.weight: Font.Bold; color: Theme.surfaceText } 
+                        StyledText { text: root.gpuName; font.pixelSize: 14; color: Theme.surfaceVariantText }
+                        Row {
+                            spacing: Theme.spacingS
+                            DankIcon { name: "memory"; size: 14; color: Theme.surfaceVariantText; anchors.verticalCenter: parent.verticalCenter }
+                            StyledText { text: root.processes.length + " procs"; font.pixelSize: 13; color: Theme.surfaceVariantText; anchors.verticalCenter: parent.verticalCenter }
+                        }
                     }
                 }
 
                 Row {
-                    anchors.right: parent.right; anchors.verticalCenter: parent.verticalCenter; spacing: 10
-                    CircleGauge { width: 75; height: 75; value: root.gpuUsage/100; label: root.gpuUsage.toFixed(0) + "%"; sublabel: "GPU"; detail: root.temperature + "°"; accentColor: root.gpuUsage > 80 ? Theme.error : Theme.primary }
-                    CircleGauge { width: 75; height: 75; value: root.vramPercent/100; label: (root.vramUsed/1024).toFixed(1) + "G"; sublabel: "VRAM"; detail: root.powerUsage + "W"; accentColor: Theme.secondary }
-                    CircleGauge { width: 75; height: 75; value: root.temperature/100; label: root.temperature + "°"; sublabel: "TEMP"; detail: root.powerUsage + "W"; accentColor: root.temperature > 85 ? Theme.error : Theme.warning }
+                    anchors.right: parent.right
+                    anchors.verticalCenter: parent.verticalCenter
+                    spacing: Theme.spacingL 
+                    
+                    CircleGauge { 
+                        width: 85; height: 85 
+                        value: root.gpuUsage / 100
+                        label: root.gpuUsage.toFixed(0) + "%"
+                        sublabel: "GPU"
+                        accentColor: root.gpuUsage > 80 ? Theme.error : Theme.primary 
+                    }
+                    
+                    CircleGauge { 
+                        width: 85; height: 85 
+                        value: root.vramPercent / 100
+                        label: (root.vramUsed / 1024).toFixed(1) + " GB"
+                        sublabel: "VRAM"
+                        accentColor: Theme.secondary 
+                    }
+
+                    CircleGauge { 
+                        visible: root.temperature > 0
+                        width: 85; height: 85 
+                        value: Math.min(1, root.temperature / 100)
+                        label: root.temperature + "°C"
+                        sublabel: "Temp"
+                        detail: root.powerUsage > 0 ? (root.powerUsage + "W") : ""
+                        accentColor: root.temperature > 85 ? Theme.error : (root.temperature > 70 ? Theme.warning : Theme.info)
+                        detailColor: Theme.surfaceVariantText
+                    }
                 }
             }
 
-            // 3. Engine activity section
+            // 3. ENGINE ACTIVITY SECTION
             Rectangle {
+                visible: root.gfxUsage > 0 || root.memUsage > 0 || root.mediaUsage > 0
                 width: parent.width
                 height: engineContent.height + Theme.spacingM * 2
                 radius: Theme.cornerRadius
@@ -1288,7 +1317,9 @@ PluginComponent {
 
                 Column {
                     id: engineContent
-                    anchors.left: parent.left; anchors.right: parent.right; anchors.top: parent.top
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.top: parent.top
                     anchors.margins: Theme.spacingM
                     spacing: Theme.spacingS
 
@@ -1304,151 +1335,520 @@ PluginComponent {
                 }
             }
 
-            // 4. Process list section matching DankListView aesthetic
+            // 4. PROCESS LIST SECTION
             Rectangle {
+                id: processSection
                 width: parent.width
-                height: 280 // Locked height so the widget never shrinks
+                height: 380 
                 radius: Theme.cornerRadius
                 color: Theme.withAlpha(Theme.surfaceContainerHigh, Theme.popupTransparency)
 
-                Column {
+                property real usableW: width - (Theme.spacingM * 2)
+                property real nameW: (usableW - 24) * 0.5   
+                property real statW: (usableW - 24) * 0.5 / 3 
+
+                property string sortCol: "vram"
+                property bool sortAsc: false
+                property string searchText: ""
+                property int filterMode: 0 
+                property int matchCount: 0
+
+                signal triggerRecalc()
+
+                onSortColChanged: triggerRecalc()
+                onSortAscChanged: triggerRecalc()
+                onFilterModeChanged: triggerRecalc()
+                onSearchTextChanged: triggerRecalc()
+
+                ListModel { id: stableModel }
+
+                function syncData() {
+                    let pList = root.processes || [];
+                    for(let i=0; i<stableModel.count; i++) stableModel.setProperty(i, "visited", false);
+                    
+                    for(let i=0; i<pList.length; i++) {
+                        let p = pList[i];
+                        let found = false;
+                        for(let j=0; j<stableModel.count; j++) {
+                            if(stableModel.get(j).pid === p.pid) {
+                                stableModel.setProperty(j, "gfx", p.gfx);
+                                stableModel.setProperty(j, "vram", p.vram);
+                                stableModel.setProperty(j, "visited", true);
+                                found = true;
+                                break;
+                            }
+                        }
+                        if(!found) {
+                            stableModel.append({
+                                name: p.name,
+                                pid: p.pid,
+                                vram: p.vram,
+                                vramUnit: p.vramUnit,
+                                gfx: p.gfx,
+                                visited: true
+                            });
+                        }
+                    }
+                    
+                    for(let i=stableModel.count-1; i>=0; i--) {
+                        if(stableModel.get(i).visited === false) stableModel.remove(i);
+                    }
+                    
+                    let count = 0;
+                    let systemProcs = ["xorg", "xwayland", "wayland", "kwin", "kwin_wayland", "kwin_x11", "niri", "hyprland", "plasmashell", "sddm", "gdm", "systemd"];
+                    for(let i=0; i<stableModel.count; i++) {
+                        let p = stableModel.get(i);
+                        let isSys = systemProcs.some(sys => p.name.toLowerCase().includes(sys));
+                        let mFilter = processSection.filterMode === 0 || (processSection.filterMode === 1 && !isSys) || (processSection.filterMode === 2 && isSys);
+                        let mSearch = processSection.searchText === "" || p.name.toLowerCase().includes(processSection.searchText.toLowerCase()) || p.pid.toString().includes(processSection.searchText);
+                        if (mFilter && mSearch) count++;
+                    }
+                    processSection.matchCount = count;
+                    processSection.triggerRecalc();
+                }
+
+                Connections {
+                    target: root
+                    function onProcessesChanged() { processSection.syncData(); }
+                }
+                Component.onCompleted: processSection.syncData()
+
+                // REPLACED COLUMN WITH STRICT ANCHORS
+                Item {
                     anchors.fill: parent
                     anchors.margins: Theme.spacingM
-                    spacing: Theme.spacingS
 
-                    // FIX 2: Table Header Row
-                    Row {
-                        width: parent.width
-                        anchors.leftMargin: Theme.spacingS
-                        anchors.rightMargin: Theme.spacingS
-                        
-                        StyledText { text: "Name"; font.pixelSize: 12; font.weight: Font.Medium; color: Theme.surfaceVariantText; width: parent.width - 200 }
-                        StyledText { text: "GPU"; font.pixelSize: 12; font.weight: Font.Medium; color: Theme.surfaceVariantText; width: 60; horizontalAlignment: Text.AlignHCenter }
-                        StyledText { text: "VRAM"; font.pixelSize: 12; font.weight: Font.Medium; color: Theme.surfaceVariantText; width: 80; horizontalAlignment: Text.AlignHCenter }
-                        StyledText { text: "PID"; font.pixelSize: 12; font.weight: Font.Medium; color: Theme.surfaceVariantText; width: 60; horizontalAlignment: Text.AlignRight }
-                    }
-
-                    // Content Area (List + Empty State)
+                    // TABLE HEADER
                     Item {
-                        width: parent.width
-                        height: parent.height - 24
+                        id: tableHeader 
+                        anchors.top: parent.top
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        height: 36
+                        z: 10 
 
-                        DankListView {
-                            id: processListView
-                            anchors.fill: parent
-                            spacing: 2
-                            clip: true
-
-                            property string searchText: ""
-                            property int filterMode: 0 
-
-                            model: {
-                                let result = root.processes;
-                                
-                                if (filterMode !== 0) {
-                                    const systemProcs = ["xorg", "xwayland", "wayland", "kwin", "kwin_wayland", "kwin_x11", "niri", "hyprland", "plasmashell", "sddm", "gdm", "systemd"];
-                                    result = result.filter(p => {
-                                        const isSystem = systemProcs.some(sys => p.name.toLowerCase().includes(sys));
-                                        return filterMode === 1 ? !isSystem : isSystem;
-                                    });
-                                }
-
-                                if (searchText !== "") {
-                                    result = result.filter(p => 
-                                        p.name.toLowerCase().includes(searchText.toLowerCase()) || 
-                                        p.pid.toString().includes(searchText)
-                                    );
-                                }
-                                
-                                return result;
+                        Rectangle {
+                            id: highlightPill
+                            height: 32
+                            anchors.verticalCenter: parent.verticalCenter
+                            radius: Theme.cornerRadius
+                            color: Theme.withAlpha(Theme.primary, 0.15)
+                            
+                            x: {
+                                if (processSection.sortCol === "name") return nameCol.x;
+                                if (processSection.sortCol === "gpu") return rightCols.x + gpuCol.x;
+                                if (processSection.sortCol === "vram") return rightCols.x + vramCol.x;
+                                if (processSection.sortCol === "pid") return rightCols.x + pidCol.x;
+                                return 0;
                             }
+                            
+                            width: {
+                                if (processSection.sortCol === "name") return nameCol.width - 4;
+                                if (processSection.sortCol === "gpu") return gpuCol.width - 4;
+                                if (processSection.sortCol === "vram") return vramCol.width - 4;
+                                if (processSection.sortCol === "pid") return pidCol.width - 4;
+                                return 0;
+                            }
+                            
+                            Behavior on x { NumberAnimation { duration: 450; easing.type: Easing.OutQuart } }
+                            Behavior on width { NumberAnimation { duration: 450; easing.type: Easing.OutQuart } }
+                        }
 
-                            delegate: Rectangle {
-                                width: ListView.view.width; height: 40; radius: Theme.cornerRadius
-                                color: procMouseArea.containsMouse ? Theme.withAlpha(Theme.primary, 0.06) : "transparent"
-                                border.color: procMouseArea.containsMouse ? Theme.withAlpha(Theme.primary, 0.12) : "transparent"
-                                border.width: 1
-
-                                MouseArea { id: procMouseArea; anchors.fill: parent; hoverEnabled: true }
-
-                                Row {
+                        Row {
+                            anchors.fill: parent
+                            
+                            Item {
+                                id: nameCol
+                                width: processSection.nameW
+                                height: parent.height
+                                MouseArea {
                                     anchors.fill: parent
+                                    onClicked: {
+                                        if (processSection.sortCol === "name") processSection.sortAsc = !processSection.sortAsc;
+                                        else { processSection.sortCol = "name"; processSection.sortAsc = true; }
+                                    }
+                                }
+                                Row {
+                                    anchors.left: parent.left
                                     anchors.leftMargin: Theme.spacingS
-                                    anchors.rightMargin: Theme.spacingS
-
-                                    // Process Name 
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    spacing: 6
+                                    StyledText { 
+                                        text: "Name"
+                                        font.pixelSize: 14 
+                                        font.weight: Font.Medium
+                                        color: processSection.sortCol === "name" ? Theme.primary : Theme.surfaceVariantText 
+                                        Behavior on color { ColorAnimation { duration: 350 } }
+                                    }
                                     Item {
-                                        width: parent.width - 200
-                                        height: parent.height
-                                        Row {
-                                            anchors.left: parent.left; anchors.verticalCenter: parent.verticalCenter; spacing: Theme.spacingS
-                                            DankIcon { name: "terminal"; size: 16; color: Theme.surfaceText; opacity: 0.8; anchors.verticalCenter: parent.verticalCenter }
-                                            StyledText { text: modelData.name; font.pixelSize: Theme.fontSizeSmall; font.weight: Font.Medium; color: Theme.surfaceText; elide: Text.ElideRight; width: Math.min(implicitWidth, 160); anchors.verticalCenter: parent.verticalCenter }
+                                        width: 16; height: 16 
+                                        DankIcon { 
+                                            anchors.centerIn: parent
+                                            name: "arrow_downward"
+                                            size: 16 
+                                            color: Theme.primary 
+                                            opacity: processSection.sortCol === "name" ? 1 : 0
+                                            Behavior on opacity { NumberAnimation { duration: 300 } } 
+                                            rotation: processSection.sortAsc ? 180 : 0
+                                            Behavior on rotation { NumberAnimation { duration: 450; easing.type: Easing.OutBack } }
                                         }
                                     }
+                                }
+                            }
+                            
+                            Row {
+                                id: rightCols
+                                width: parent.width * 0.5 - 24
+                                height: parent.height
 
-                                    // GFX 
-                                    StyledText {
-                                        width: 60
-                                        text: modelData.gfx > 0 ? `${modelData.gfx}%` : "—"
-                                        font.pixelSize: Theme.fontSizeSmall
-                                        font.weight: Font.Bold
-                                        color: modelData.gfx > 50 ? Theme.warning : Theme.surfaceText
-                                        horizontalAlignment: Text.AlignHCenter
-                                        anchors.verticalCenter: parent.verticalCenter
+                                Item {
+                                    id: gpuCol
+                                    width: processSection.statW
+                                    height: parent.height
+                                    MouseArea {
+                                        anchors.fill: parent
+                                        onClicked: {
+                                            if (processSection.sortCol === "gpu") processSection.sortAsc = !processSection.sortAsc;
+                                            else { processSection.sortCol = "gpu"; processSection.sortAsc = false; }
+                                        }
+                                    }
+                                    Row {
+                                        anchors.centerIn: parent
+                                        spacing: 6
+                                        StyledText { 
+                                            text: "GPU"
+                                            font.pixelSize: 14 
+                                            font.weight: Font.Medium
+                                            color: processSection.sortCol === "gpu" ? Theme.primary : Theme.surfaceVariantText 
+                                            Behavior on color { ColorAnimation { duration: 350 } }
+                                        }
+                                        Item {
+                                            width: 16; height: 16
+                                            DankIcon { 
+                                                anchors.centerIn: parent
+                                                name: "arrow_downward"
+                                                size: 16 
+                                                color: Theme.primary 
+                                                opacity: processSection.sortCol === "gpu" ? 1 : 0
+                                                Behavior on opacity { NumberAnimation { duration: 300 } }
+                                                rotation: processSection.sortAsc ? 180 : 0
+                                                Behavior on rotation { NumberAnimation { duration: 450; easing.type: Easing.OutBack } }
+                                            }
+                                        }
+                                    }
+                                }
+
+                                Item {
+                                    id: vramCol
+                                    width: processSection.statW
+                                    height: parent.height
+                                    MouseArea {
+                                        anchors.fill: parent
+                                        onClicked: {
+                                            if (processSection.sortCol === "vram") processSection.sortAsc = !processSection.sortAsc;
+                                            else { processSection.sortCol = "vram"; processSection.sortAsc = false; }
+                                        }
+                                    }
+                                    Row {
+                                        anchors.centerIn: parent
+                                        spacing: 6
+                                        StyledText { 
+                                            text: "VRAM"
+                                            font.pixelSize: 14 
+                                            font.weight: Font.Medium
+                                            color: processSection.sortCol === "vram" ? Theme.primary : Theme.surfaceVariantText 
+                                            Behavior on color { ColorAnimation { duration: 350 } }
+                                        }
+                                        Item {
+                                            width: 16; height: 16
+                                            DankIcon { 
+                                                anchors.centerIn: parent
+                                                name: "arrow_downward"
+                                                size: 16 
+                                                color: Theme.primary 
+                                                opacity: processSection.sortCol === "vram" ? 1 : 0
+                                                Behavior on opacity { NumberAnimation { duration: 300 } }
+                                                rotation: processSection.sortAsc ? 180 : 0
+                                                Behavior on rotation { NumberAnimation { duration: 450; easing.type: Easing.OutBack } }
+                                            }
+                                        }
+                                    }
+                                }
+
+                                Item {
+                                    id: pidCol
+                                    width: processSection.statW
+                                    height: parent.height
+                                    MouseArea {
+                                        anchors.fill: parent
+                                        onClicked: {
+                                            if (processSection.sortCol === "pid") processSection.sortAsc = !processSection.sortAsc;
+                                            else { processSection.sortCol = "pid"; processSection.sortAsc = true; }
+                                        }
+                                    }
+                                    Row {
+                                        anchors.centerIn: parent
+                                        spacing: 6
+                                        StyledText { 
+                                            text: "PID"
+                                            font.pixelSize: 14 
+                                            font.weight: Font.Medium
+                                            color: processSection.sortCol === "pid" ? Theme.primary : Theme.surfaceVariantText 
+                                            Behavior on color { ColorAnimation { duration: 350 } }
+                                        }
+                                        Item {
+                                            width: 16; height: 16
+                                            DankIcon { 
+                                                anchors.centerIn: parent
+                                                name: "arrow_downward"
+                                                size: 16 
+                                                color: Theme.primary 
+                                                opacity: processSection.sortCol === "pid" ? 1 : 0
+                                                Behavior on opacity { NumberAnimation { duration: 300 } }
+                                                rotation: processSection.sortAsc ? 180 : 0
+                                                Behavior on rotation { NumberAnimation { duration: 450; easing.type: Easing.OutBack } }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            
+                            Item { width: 24; height: parent.height } 
+                        }
+                    }
+
+                    // GLIDING LIST VIEW STRICTLY ANCHORED BELOW HEADER
+                    DankFlickable {
+                        id: processFlickable
+                        anchors.top: tableHeader.bottom
+                        anchors.topMargin: Theme.spacingM
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        anchors.bottom: parent.bottom
+                        clip: true // Enforces strict boundaries
+                        
+                        contentHeight: processSection.matchCount * 50
+                        Behavior on contentHeight { NumberAnimation { duration: 500; easing.type: Easing.OutQuart } }
+
+                        Item {
+                            width: processFlickable.width
+                            height: processFlickable.contentHeight
+
+                            Repeater {
+                                model: stableModel
+                                delegate: Rectangle {
+                                    id: procDelegate
+                                    width: parent.width
+                                    radius: Theme.cornerRadius
+                                    color: procMouseArea.containsMouse ? Theme.withAlpha(Theme.surfaceText, 0.06) : "transparent"
+
+                                    height: isMatch ? 48 : 0
+                                    opacity: isMatch ? 1 : 0
+                                    visible: height > 0 || opacity > 0
+                                    
+                                    y: Math.max(0, visualIndex * 50)
+
+                                    Behavior on y { NumberAnimation { duration: 500; easing.type: Easing.OutQuart } }
+                                    Behavior on height { NumberAnimation { duration: 400; easing.type: Easing.OutQuart } }
+                                    Behavior on opacity { NumberAnimation { duration: 300; easing.type: Easing.OutQuart } }
+
+                                    property int visualIndex: -1
+                                    property bool isMatch: false
+
+                                    function computeRank() {
+                                        let myP = stableModel.get(index);
+                                        if (!myP) return;
+
+                                        let systemProcs = ["xorg", "xwayland", "wayland", "kwin", "kwin_wayland", "kwin_x11", "niri", "hyprland", "plasmashell", "sddm", "gdm", "systemd"];
+                                        let myIsSys = systemProcs.some(sys => myP.name.toLowerCase().includes(sys));
+                                        let myMatchF = processSection.filterMode === 0 || (processSection.filterMode === 1 && !myIsSys) || (processSection.filterMode === 2 && myIsSys);
+                                        let myMatchS = processSection.searchText === "" || myP.name.toLowerCase().includes(processSection.searchText.toLowerCase()) || myP.pid.toString().includes(processSection.searchText);
+                                        
+                                        isMatch = myMatchF && myMatchS;
+                                        
+                                        if (!isMatch) {
+                                            visualIndex = -1;
+                                            return;
+                                        }
+
+                                        let rank = 0;
+                                        let myVal;
+                                        if (processSection.sortCol === "name") myVal = myP.name.toLowerCase();
+                                        else if (processSection.sortCol === "gpu") myVal = myP.gfx;
+                                        else if (processSection.sortCol === "vram") myVal = myP.vram * (myP.vramUnit === "GiB" ? 1024 : 1);
+                                        else if (processSection.sortCol === "pid") myVal = myP.pid;
+
+                                        for (let i = 0; i < stableModel.count; i++) {
+                                            if (i === index) continue;
+                                            let otherP = stableModel.get(i);
+                                            
+                                            let otherIsSys = systemProcs.some(sys => otherP.name.toLowerCase().includes(sys));
+                                            let otherMatchF = processSection.filterMode === 0 || (processSection.filterMode === 1 && !otherIsSys) || (processSection.filterMode === 2 && otherIsSys);
+                                            let otherMatchS = processSection.searchText === "" || otherP.name.toLowerCase().includes(processSection.searchText.toLowerCase()) || otherP.pid.toString().includes(processSection.searchText);
+                                            
+                                            if (otherMatchF && otherMatchS) {
+                                                let otherVal;
+                                                if (processSection.sortCol === "name") otherVal = otherP.name.toLowerCase();
+                                                else if (processSection.sortCol === "gpu") otherVal = otherP.gfx;
+                                                else if (processSection.sortCol === "vram") otherVal = otherP.vram * (otherP.vramUnit === "GiB" ? 1024 : 1);
+                                                else if (processSection.sortCol === "pid") otherVal = otherP.pid;
+
+                                                let comesAfter = false;
+                                                if (myVal > otherVal) comesAfter = processSection.sortAsc ? true : false;
+                                                else if (myVal < otherVal) comesAfter = processSection.sortAsc ? false : true;
+                                                else {
+                                                    if (myP.pid > otherP.pid) comesAfter = processSection.sortAsc ? true : false;
+                                                    else if (myP.pid < otherP.pid) comesAfter = processSection.sortAsc ? false : true;
+                                                    else if (index > i) comesAfter = true;
+                                                }
+
+                                                if (comesAfter) rank++;
+                                            }
+                                        }
+                                        visualIndex = rank;
                                     }
 
-                                    // VRAM Badge
-                                    Item {
-                                        width: 80
+                                    Connections {
+                                        target: processSection
+                                        function onTriggerRecalc() { computeRank(); }
+                                    }
+                                    Component.onCompleted: {
+                                        computeRank();
+                                        y = Math.max(0, visualIndex * 50); 
+                                    }
+
+                                    MouseArea { id: procMouseArea; anchors.fill: parent; hoverEnabled: true }
+
+                                    Row {
+                                        width: parent.width
                                         height: parent.height
-                                        Rectangle {
-                                            width: 70; height: 22; radius: 6
-                                            color: Theme.withAlpha(Theme.primary, 0.15)
-                                            anchors.centerIn: parent
-                                            StyledText {
-                                                text: `${modelData.vram}${modelData.vramUnit === "MiB" ? "M" : "G"}`
-                                                font.pixelSize: 11
-                                                font.weight: Font.Bold
-                                                color: Theme.primary
+
+                                        Item {
+                                            width: processSection.nameW
+                                            height: parent.height
+                                            Row {
+                                                anchors.left: parent.left
+                                                anchors.leftMargin: Theme.spacingS
+                                                anchors.verticalCenter: parent.verticalCenter
+                                                spacing: 12
+                                                
+                                                DankIcon { 
+                                                    name: "developer_board"
+                                                    size: 16 
+                                                    color: Theme.surfaceVariantText
+                                                    anchors.verticalCenter: parent.verticalCenter 
+                                                }
+                                                
+                                                StyledText { 
+                                                    text: model.name
+                                                    font.pixelSize: 13 
+                                                    font.weight: Font.Medium
+                                                    color: Theme.surfaceText
+                                                    elide: Text.ElideRight
+                                                    width: Math.min(implicitWidth, processSection.nameW - 40)
+                                                    anchors.verticalCenter: parent.verticalCenter 
+                                                }
+                                            }
+                                        }
+
+                                        Row {
+                                            width: parent.width * 0.5 - 24
+                                            height: parent.height
+
+                                            Item {
+                                                width: processSection.statW
+                                                height: parent.height
+                                                Rectangle {
+                                                    width: 54; height: 24; radius: height / 2
+                                                    anchors.centerIn: parent
+                                                    color: {
+                                                        if (model.gfx > 80) return Theme.withAlpha(Theme.error, 0.15);
+                                                        if (model.gfx > 50) return Theme.withAlpha(Theme.warning, 0.15);
+                                                        return Theme.withAlpha(Theme.surfaceText, 0.1)
+                                                    }
+                                                    StyledText {
+                                                        anchors.centerIn: parent
+                                                        text: model.gfx > 0 ? `${model.gfx.toFixed(0)}%` : "0%"
+                                                        font.pixelSize: 11
+                                                        font.weight: Font.Bold
+                                                        color: {
+                                                            if (model.gfx > 80) return Theme.error;
+                                                            if (model.gfx > 50) return Theme.warning;
+                                                            return Theme.surfaceText;
+                                                        }
+                                                    }
+                                                }
+                                            }
+
+                                            Item {
+                                                width: processSection.statW
+                                                height: parent.height
+                                                Rectangle {
+                                                    width: 62; height: 24; radius: height / 2
+                                                    anchors.centerIn: parent
+                                                    color: {
+                                                        let v = model.vram;
+                                                        if (model.vramUnit === "GiB") v *= 1024;
+                                                        if (v > 2000) return Theme.withAlpha(Theme.error, 0.15);
+                                                        if (v > 1000) return Theme.withAlpha(Theme.warning, 0.15);
+                                                        return Theme.withAlpha(Theme.surfaceText, 0.1)
+                                                    }
+                                                    StyledText {
+                                                        anchors.centerIn: parent
+                                                        font.pixelSize: 11
+                                                        font.weight: Font.Bold
+                                                        text: {
+                                                            let v = model.vram;
+                                                            let u = model.vramUnit;
+                                                            if (u === "MiB" && v > 1000) return (v / 1024).toFixed(1) + " GB";
+                                                            return v + " " + (u === "MiB" ? "MB" : "GB");
+                                                        }
+                                                        color: {
+                                                            let v = model.vram;
+                                                            if (model.vramUnit === "GiB") v *= 1024;
+                                                            if (v > 2000) return Theme.error;
+                                                            if (v > 1000) return Theme.warning;
+                                                            return Theme.surfaceText;
+                                                        }
+                                                    }
+                                                }
+                                            }
+
+                                            Item {
+                                                width: processSection.statW
+                                                height: parent.height
+                                                StyledText {
+                                                    anchors.centerIn: parent
+                                                    text: model.pid
+                                                    font.pixelSize: 12
+                                                    color: Theme.surfaceVariantText
+                                                }
+                                            }
+                                        }
+
+                                        Item {
+                                            width: 24
+                                            height: parent.height
+                                            DankIcon {
+                                                name: "expand_more"
+                                                size: 18
+                                                color: Theme.surfaceVariantText
                                                 anchors.centerIn: parent
                                             }
                                         }
                                     }
-
-                                    // PID
-                                    StyledText {
-                                        width: 60
-                                        text: modelData.pid
-                                        font.pixelSize: Theme.fontSizeSmall - 1
-                                        color: Theme.surfaceVariantText
-                                        horizontalAlignment: Text.AlignRight
-                                        anchors.verticalCenter: parent.verticalCenter
-                                    }
                                 }
                             }
                         }
+                    }
 
-                        // FIX 3: Empty State exactly matching the screenshot
-                        Column {
-                            visible: processListView.count === 0
-                            anchors.centerIn: parent
-                            spacing: Theme.spacingM
-
-                            DankIcon { 
-                                name: "search_off" 
-                                size: 36
-                                color: Theme.surfaceVariantText
-                                anchors.horizontalCenter: parent.horizontalCenter 
-                            }
-
-                            StyledText { 
-                                text: "No matching processes"
-                                font.pixelSize: Theme.fontSizeMedium
-                                color: Theme.surfaceVariantText
-                                anchors.horizontalCenter: parent.horizontalCenter 
-                            }
-                        }
+                    // Empty State
+                    Column {
+                        visible: processSection.matchCount === 0
+                        anchors.centerIn: parent
+                        spacing: Theme.spacingM
+                        DankIcon { name: "search_off"; size: 36; color: Theme.surfaceVariantText; anchors.horizontalCenter: parent.horizontalCenter }
+                        StyledText { text: "No matching processes"; font.pixelSize: 14; color: Theme.surfaceVariantText; anchors.horizontalCenter: parent.horizontalCenter }
                     }
                 }
             }
