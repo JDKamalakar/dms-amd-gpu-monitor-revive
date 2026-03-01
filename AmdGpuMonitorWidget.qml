@@ -1211,15 +1211,15 @@ PluginComponent {
                         height: parent.height
                         anchors.verticalCenter: parent.verticalCenter
                         spacing: Theme.spacingS
-                        DankIcon { name: "apps"; size: 22; color: Theme.primary; anchors.verticalCenter: parent.verticalCenter }
+                        DankIcon { name: "dashboard"; size: 22; color: Theme.primary; anchors.verticalCenter: parent.verticalCenter }
                         StyledText { text: "Processes"; font.pixelSize: 18; font.weight: Font.Bold; color: Theme.surfaceText; anchors.verticalCenter: parent.verticalCenter }
                     }
 
                     DankButtonGroup {
                         id: processFilters
                         anchors.verticalCenter: parent.verticalCenter
-                        width: 220 
-                        buttonHeight: 32 
+                        width: 230 
+                        buttonHeight: 28 
                         checkEnabled: false 
                         model: ["All", "User", "System"]
                         currentIndex: 0
@@ -1238,7 +1238,7 @@ PluginComponent {
                     anchors.leftMargin: Theme.spacingM
                     anchors.right: parent.right
                     anchors.verticalCenter: parent.verticalCenter
-                    height: 32
+                    height: 36
                     placeholderText: "Search processes or PIDs..."
                     onTextChanged: processSection.searchText = text
                 }
