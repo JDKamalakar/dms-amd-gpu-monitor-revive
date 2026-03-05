@@ -1185,7 +1185,7 @@ PluginComponent {
     }
 
 
-    // ==========================================
+// ==========================================
     // DMS EXTENDED STYLE (Advanced Dashboard)
     // ==========================================
     Component {
@@ -1243,10 +1243,10 @@ PluginComponent {
                     }
                 }
 
-                // SEARCH BAR WITH NATIVE INTERNAL ICON & PERSISTENT FOCUS
+                // SEARCH BAR WITH PERSISTENT FOCUS
                 Item {
                     anchors.left: leftControls.right
-                    anchors.leftMargin: Theme.spacingM
+                    anchors.leftMargin: Theme.spacingS 
                     anchors.right: parent.right
                     anchors.verticalCenter: parent.verticalCenter
                     height: 40 
@@ -1254,9 +1254,6 @@ PluginComponent {
                     DankTextField {
                         id: searchInput
                         anchors.fill: parent
-                        
-                        // FIX: Using the widget's native internal icon support
-                        // This handles all the text spacing automatically!
                         leftIconName: "search"
                         leftIconColor: Theme.primary
                         leftIconFocusedColor: Theme.primary
@@ -1264,11 +1261,9 @@ PluginComponent {
                         placeholderText: "Search processes or PIDs..."
                         onTextChanged: processSection.searchText = text.trim()
                         
-                        // Focus Logic
                         focus: true
                         Component.onCompleted: searchInput.forceActiveFocus()
                         
-                        // Re-grabs focus if user clicks elsewhere in the dashboard
                         onActiveFocusChanged: {
                             if (!activeFocus && rootColumn.visible) {
                                 searchInput.forceActiveFocus()
@@ -1317,7 +1312,7 @@ PluginComponent {
                         value: root.gpuUsage / 100
                         label: root.gpuUsage.toFixed(0) + "%"
                         sublabel: "GPU"
-                        accentColor: root.gpuUsage > 80 ? Theme.error : Theme.primary 
+                        accentColor: root.getUsageColor(root.gpuUsage) 
                     }
                     
                     CircleGauge { 
@@ -1325,7 +1320,7 @@ PluginComponent {
                         value: root.vramPercent / 100
                         label: (root.vramUsed / 1024).toFixed(1) + " GB"
                         sublabel: "Memory"
-                        accentColor: Theme.secondary 
+                        accentColor: root.getUsageColor(root.vramPercent) 
                     }
 
                     CircleGauge { 
@@ -1380,10 +1375,8 @@ PluginComponent {
                 property real nameW: (usableW - 24) * 0.5   
                 property real statW: (usableW - 24) * 0.5 / 3 
 
-                // DEFAULT SORT: Name (Ascending)
                 property string sortCol: "name"
                 property bool sortAsc: true 
-                
                 property string searchText: ""
                 property int filterMode: 0 
                 property int matchCount: 0
@@ -1495,8 +1488,23 @@ PluginComponent {
                                 id: nameCol
                                 width: processSection.nameW
                                 height: parent.height
+
+                                property bool isSettled: false
+                                Rectangle {
+                                    anchors.fill: parent; anchors.margins: 2; radius: Theme.cornerRadius
+                                    // FIX: Border opacity reduced to match the fill strength
+                                    border.color: nameHeaderArea.containsMouse ? Theme.withAlpha(Theme.primary, 0.25) : "transparent"
+                                    border.width: 1
+                                    color: nameHeaderArea.containsMouse && parent.isSettled ? Theme.withAlpha(Theme.primary, 0.12) : "transparent"
+                                    Behavior on color { ColorAnimation { duration: 200 } }
+                                    Behavior on border.color { ColorAnimation { duration: 150 } }
+                                }
+                                Timer { running: nameHeaderArea.containsMouse; interval: 150; onTriggered: nameCol.isSettled = true }
+
                                 MouseArea {
-                                    anchors.fill: parent
+                                    id: nameHeaderArea
+                                    anchors.fill: parent; hoverEnabled: true
+                                    onExited: nameCol.isSettled = false
                                     onClicked: {
                                         if (processSection.sortCol === "name") processSection.sortAsc = !processSection.sortAsc;
                                         else { processSection.sortCol = "name"; processSection.sortAsc = true; }
@@ -1510,7 +1518,8 @@ PluginComponent {
                                     StyledText { 
                                         text: "Name"
                                         font.pixelSize: 14 
-                                        font.weight: Font.Medium
+                                        // FIX: Use Font.Black for heavy boldness
+                                        font.weight: processSection.sortCol === "name" ? Font.Black : Font.Medium
                                         color: processSection.sortCol === "name" ? Theme.primary : Theme.surfaceVariantText 
                                     }
                                     Item {
@@ -1538,8 +1547,21 @@ PluginComponent {
                                     id: gpuCol
                                     width: processSection.statW
                                     height: parent.height
+
+                                    property bool isSettled: false
+                                    Rectangle {
+                                        anchors.fill: parent; anchors.margins: 2; radius: Theme.cornerRadius
+                                        border.color: gpuHeaderArea.containsMouse ? Theme.withAlpha(Theme.primary, 0.25) : "transparent"
+                                        border.width: 1
+                                        color: gpuHeaderArea.containsMouse && parent.isSettled ? Theme.withAlpha(Theme.primary, 0.12) : "transparent"
+                                        Behavior on color { ColorAnimation { duration: 200 } }
+                                    }
+                                    Timer { running: gpuHeaderArea.containsMouse; interval: 150; onTriggered: gpuCol.isSettled = true }
+
                                     MouseArea {
-                                        anchors.fill: parent
+                                        id: gpuHeaderArea
+                                        anchors.fill: parent; hoverEnabled: true
+                                        onExited: gpuCol.isSettled = false
                                         onClicked: {
                                             if (processSection.sortCol === "gpu") processSection.sortAsc = !processSection.sortAsc;
                                             else { processSection.sortCol = "gpu"; processSection.sortAsc = false; }
@@ -1551,7 +1573,7 @@ PluginComponent {
                                         StyledText { 
                                             text: "GPU"
                                             font.pixelSize: 14 
-                                            font.weight: Font.Medium
+                                            font.weight: processSection.sortCol === "gpu" ? Font.Black : Font.Medium
                                             color: processSection.sortCol === "gpu" ? Theme.primary : Theme.surfaceVariantText 
                                         }
                                         Item {
@@ -1574,8 +1596,21 @@ PluginComponent {
                                     id: vramCol
                                     width: processSection.statW
                                     height: parent.height
+
+                                    property bool isSettled: false
+                                    Rectangle {
+                                        anchors.fill: parent; anchors.margins: 2; radius: Theme.cornerRadius
+                                        border.color: vramHeaderArea.containsMouse ? Theme.withAlpha(Theme.primary, 0.25) : "transparent"
+                                        border.width: 1
+                                        color: vramHeaderArea.containsMouse && parent.isSettled ? Theme.withAlpha(Theme.primary, 0.12) : "transparent"
+                                        Behavior on color { ColorAnimation { duration: 200 } }
+                                    }
+                                    Timer { running: vramHeaderArea.containsMouse; interval: 150; onTriggered: vramCol.isSettled = true }
+
                                     MouseArea {
-                                        anchors.fill: parent
+                                        id: vramHeaderArea
+                                        anchors.fill: parent; hoverEnabled: true
+                                        onExited: vramCol.isSettled = false
                                         onClicked: {
                                             if (processSection.sortCol === "vram") processSection.sortAsc = !processSection.sortAsc;
                                             else { processSection.sortCol = "vram"; processSection.sortAsc = false; }
@@ -1587,7 +1622,7 @@ PluginComponent {
                                         StyledText { 
                                             text: "Memory"
                                             font.pixelSize: 14 
-                                            font.weight: Font.Medium
+                                            font.weight: processSection.sortCol === "vram" ? Font.Black : Font.Medium
                                             color: processSection.sortCol === "vram" ? Theme.primary : Theme.surfaceVariantText 
                                         }
                                         Item {
@@ -1610,8 +1645,21 @@ PluginComponent {
                                     id: pidCol
                                     width: processSection.statW
                                     height: parent.height
+
+                                    property bool isSettled: false
+                                    Rectangle {
+                                        anchors.fill: parent; anchors.margins: 2; radius: Theme.cornerRadius
+                                        border.color: pidHeaderArea.containsMouse ? Theme.withAlpha(Theme.primary, 0.25) : "transparent"
+                                        border.width: 1
+                                        color: pidHeaderArea.containsMouse && parent.isSettled ? Theme.withAlpha(Theme.primary, 0.12) : "transparent"
+                                        Behavior on color { ColorAnimation { duration: 200 } }
+                                    }
+                                    Timer { running: pidHeaderArea.containsMouse; interval: 150; onTriggered: pidCol.isSettled = true }
+
                                     MouseArea {
-                                        anchors.fill: parent
+                                        id: pidHeaderArea
+                                        anchors.fill: parent; hoverEnabled: true
+                                        onExited: pidCol.isSettled = false
                                         onClicked: {
                                             if (processSection.sortCol === "pid") processSection.sortAsc = !processSection.sortAsc;
                                             else { processSection.sortCol = "pid"; processSection.sortAsc = true; }
@@ -1623,7 +1671,7 @@ PluginComponent {
                                         StyledText { 
                                             text: "PID"
                                             font.pixelSize: 14 
-                                            font.weight: Font.Medium
+                                            font.weight: processSection.sortCol === "pid" ? Font.Black : Font.Medium
                                             color: processSection.sortCol === "pid" ? Theme.primary : Theme.surfaceVariantText 
                                         }
                                         Item {
@@ -1670,7 +1718,14 @@ PluginComponent {
                                     id: procDelegate
                                     width: parent.width
                                     radius: Theme.cornerRadius
-                                    color: procMouseArea.containsMouse ? Theme.withAlpha(Theme.surfaceText, 0.06) : "transparent"
+
+                                    property bool isSettled: false
+                                    // FIX: Reduced border opacity to match settled fill strength
+                                    border.color: procMouseArea.containsMouse ? Theme.withAlpha(Theme.primary, 0.25) : "transparent"
+                                    border.width: 1
+                                    color: procMouseArea.containsMouse && isSettled ? Theme.withAlpha(Theme.surfaceText, 0.06) : "transparent"
+
+                                    Timer { running: procMouseArea.containsMouse; interval: 150; onTriggered: procDelegate.isSettled = true }
 
                                     height: isMatch ? 48 : 0
                                     opacity: isMatch ? 1 : 0
@@ -1678,6 +1733,7 @@ PluginComponent {
                                     
                                     y: Math.max(0, visualIndex * 50)
 
+                                    Behavior on color { ColorAnimation { duration: 250 } }
                                     Behavior on y { NumberAnimation { duration: 550; easing.type: Easing.OutQuart } }
                                     Behavior on height { NumberAnimation { duration: 450; easing.type: Easing.OutQuart } }
                                     Behavior on opacity { NumberAnimation { duration: 350; easing.type: Easing.OutQuart } }
@@ -1747,7 +1803,7 @@ PluginComponent {
                                         y = Math.max(0, visualIndex * 50); 
                                     }
 
-                                    MouseArea { id: procMouseArea; anchors.fill: parent; hoverEnabled: true }
+                                    MouseArea { id: procMouseArea; anchors.fill: parent; hoverEnabled: true; onExited: procDelegate.isSettled = false }
 
                                     Row {
                                         width: parent.width
@@ -1791,21 +1847,13 @@ PluginComponent {
                                                 Rectangle {
                                                     width: 54; height: 24; radius: height / 2
                                                     anchors.centerIn: parent
-                                                    color: {
-                                                        if (model.gfx > 80) return Theme.withAlpha(Theme.error, 0.15);
-                                                        if (model.gfx > 50) return Theme.withAlpha(Theme.warning, 0.15);
-                                                        return Theme.withAlpha(Theme.surfaceText, 0.1)
-                                                    }
+                                                    color: Theme.withAlpha(root.getUsageColor(model.gfx), 0.15)
                                                     StyledText {
                                                         anchors.centerIn: parent
                                                         text: model.gfx > 0 ? `${model.gfx.toFixed(0)}%` : "0%"
                                                         font.pixelSize: 11
                                                         font.weight: Font.Bold
-                                                        color: {
-                                                            if (model.gfx > 80) return Theme.error;
-                                                            if (model.gfx > 50) return Theme.warning;
-                                                            return Theme.surfaceText;
-                                                        }
+                                                        color: root.getUsageColor(model.gfx)
                                                     }
                                                 }
                                             }
@@ -1816,13 +1864,8 @@ PluginComponent {
                                                 Rectangle {
                                                     width: 62; height: 24; radius: height / 2
                                                     anchors.centerIn: parent
-                                                    color: {
-                                                        let v = model.vram;
-                                                        if (model.vramUnit === "GiB") v *= 1024;
-                                                        if (v > 2000) return Theme.withAlpha(Theme.error, 0.15);
-                                                        if (v > 1000) return Theme.withAlpha(Theme.warning, 0.15);
-                                                        return Theme.withAlpha(Theme.surfaceText, 0.1)
-                                                    }
+                                                    property real procVramPercent: root.vramTotal > 0 ? ((model.vramUnit === "GiB" ? model.vram * 1024 : model.vram) / root.vramTotal * 100) : 0
+                                                    color: Theme.withAlpha(root.getUsageColor(procVramPercent), 0.15)
                                                     StyledText {
                                                         anchors.centerIn: parent
                                                         font.pixelSize: 11
@@ -1833,13 +1876,7 @@ PluginComponent {
                                                             if (u === "MiB" && v > 1000) return (v / 1024).toFixed(1) + " GB";
                                                             return v + " " + (u === "MiB" ? "MB" : "GB");
                                                         }
-                                                        color: {
-                                                            let v = model.vram;
-                                                            if (model.vramUnit === "GiB") v *= 1024;
-                                                            if (v > 2000) return Theme.error;
-                                                            if (v > 1000) return Theme.warning;
-                                                            return Theme.surfaceText;
-                                                        }
+                                                        color: root.getUsageColor(parent.procVramPercent)
                                                     }
                                                 }
                                             }
