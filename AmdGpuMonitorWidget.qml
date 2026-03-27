@@ -779,7 +779,7 @@ PluginComponent {
                             width: ListView.view.width
                             height: 44
                             radius: Theme.cornerRadius
-                            Behavior on height { NumberAnimation { duration: 300; easing.type: Easing.OutQuart } }
+                            Behavior on height { NumberAnimation { duration: Theme.shortDuration; easing.type: Theme.standardEasing } }
                             color: altProcMouseArea.containsMouse
                                 ? Qt.rgba(Theme.primary.r, Theme.primary.g, Theme.primary.b, 0.06)
                                 : "transparent"
@@ -788,11 +788,14 @@ PluginComponent {
                                 : "transparent"
                             border.width: 1
 
+                            DankRipple { id: altRipple; cornerRadius: parent.radius }
+
                             MouseArea {
                                 id: altProcMouseArea
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 acceptedButtons: Qt.LeftButton | Qt.RightButton
+                                onPressed: altRipple.trigger(mouse.x, mouse.y)
                                 onClicked: {
                                     if (mouse.button === Qt.RightButton && root.contextMenuRef) {
                                         let globalPos = mapToItem(root.contextMenuRef.parent, mouse.x, mouse.y);
@@ -1151,7 +1154,7 @@ PluginComponent {
                             width: ListView.view.width
                             height: 44
                             radius: Theme.cornerRadius
-                            Behavior on height { NumberAnimation { duration: 300; easing.type: Easing.OutQuart } }
+                            Behavior on height { NumberAnimation { duration: Theme.shortDuration; easing.type: Theme.standardEasing } }
                             color: dmsProcMouseArea.containsMouse
                                 ? Qt.rgba(Theme.primary.r, Theme.primary.g, Theme.primary.b, 0.06)
                                 : "transparent"
@@ -1160,11 +1163,14 @@ PluginComponent {
                                 : "transparent"
                             border.width: 1
 
+                            DankRipple { id: dmsRipple; cornerRadius: parent.radius }
+
                             MouseArea {
                                 id: dmsProcMouseArea
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 acceptedButtons: Qt.LeftButton | Qt.RightButton
+                                onPressed: dmsRipple.trigger(mouse.x, mouse.y)
                                 onClicked: {
                                     if (mouse.button === Qt.RightButton && root.contextMenuRef) {
                                         let globalPos = mapToItem(root.contextMenuRef.parent, mouse.x, mouse.y);
@@ -1634,8 +1640,8 @@ PluginComponent {
                                 return 0;
                             }
                             
-                            Behavior on x { NumberAnimation { duration: 450; easing.type: Easing.OutQuart } }
-                            Behavior on width { NumberAnimation { duration: 450; easing.type: Easing.OutQuart } }
+                            Behavior on x { NumberAnimation { duration: Theme.longDuration; easing.type: Theme.standardEasing } }
+                            Behavior on width { NumberAnimation { duration: Theme.longDuration; easing.type: Theme.standardEasing } }
                         }
 
                         Row {
@@ -1653,7 +1659,7 @@ PluginComponent {
                                     border.color: nameHeaderArea.containsMouse ? Theme.withAlpha(Theme.primary, 0.25) : "transparent"
                                     border.width: 1
                                     color: nameHeaderArea.containsMouse && parent.isSettled ? Theme.withAlpha(Theme.primary, 0.12) : "transparent"
-                                    Behavior on color { ColorAnimation { duration: 200 } }
+                                    Behavior on color { ColorAnimation { duration: Theme.shortDuration } }
                                     Behavior on border.color { ColorAnimation { duration: 150 } }
                                 }
                                 Timer { running: nameHeaderArea.containsMouse; interval: 150; onTriggered: nameCol.isSettled = true }
@@ -1687,9 +1693,9 @@ PluginComponent {
                                             size: 16 
                                             color: Theme.primary 
                                             opacity: processSection.sortCol === "name" ? 1 : 0
-                                            Behavior on opacity { NumberAnimation { duration: 300 } } 
+                                            Behavior on opacity { NumberAnimation { duration: Theme.shortDuration } } 
                                             rotation: processSection.sortAsc ? 180 : 0
-                                            Behavior on rotation { NumberAnimation { duration: 450; easing.type: Easing.OutBack } }
+                                            Behavior on rotation { NumberAnimation { duration: Theme.mediumDuration; easing.type: Theme.standardEasing } }
                                         }
                                     }
                                 }
@@ -1711,7 +1717,7 @@ PluginComponent {
                                         border.color: gpuHeaderArea.containsMouse ? Theme.withAlpha(Theme.primary, 0.25) : "transparent"
                                         border.width: 1
                                         color: gpuHeaderArea.containsMouse && parent.isSettled ? Theme.withAlpha(Theme.primary, 0.12) : "transparent"
-                                        Behavior on color { ColorAnimation { duration: 200 } }
+                                        Behavior on color { ColorAnimation { duration: Theme.shortDuration } }
                                     }
                                     Timer { running: gpuHeaderArea.containsMouse; interval: 150; onTriggered: gpuCol.isSettled = true }
 
@@ -1741,9 +1747,9 @@ PluginComponent {
                                                 size: 16 
                                                 color: Theme.primary 
                                                 opacity: processSection.sortCol === "gpu" ? 1 : 0
-                                                Behavior on opacity { NumberAnimation { duration: 300 } }
+                                                Behavior on opacity { NumberAnimation { duration: Theme.shortDuration } }
                                                 rotation: processSection.sortAsc ? 180 : 0
-                                                Behavior on rotation { NumberAnimation { duration: 450; easing.type: Easing.OutBack } }
+                                                Behavior on rotation { NumberAnimation { duration: Theme.mediumDuration; easing.type: Theme.standardEasing } }
                                             }
                                         }
                                     }
@@ -1760,7 +1766,7 @@ PluginComponent {
                                         border.color: vramHeaderArea.containsMouse ? Theme.withAlpha(Theme.primary, 0.25) : "transparent"
                                         border.width: 1
                                         color: vramHeaderArea.containsMouse && parent.isSettled ? Theme.withAlpha(Theme.primary, 0.12) : "transparent"
-                                        Behavior on color { ColorAnimation { duration: 200 } }
+                                        Behavior on color { ColorAnimation { duration: Theme.shortDuration } }
                                     }
                                     Timer { running: vramHeaderArea.containsMouse; interval: 150; onTriggered: vramCol.isSettled = true }
 
@@ -1790,9 +1796,9 @@ PluginComponent {
                                                 size: 16 
                                                 color: Theme.primary 
                                                 opacity: processSection.sortCol === "vram" ? 1 : 0
-                                                Behavior on opacity { NumberAnimation { duration: 300 } }
+                                                Behavior on opacity { NumberAnimation { duration: Theme.shortDuration } }
                                                 rotation: processSection.sortAsc ? 180 : 0
-                                                Behavior on rotation { NumberAnimation { duration: 450; easing.type: Easing.OutBack } }
+                                                Behavior on rotation { NumberAnimation { duration: Theme.mediumDuration; easing.type: Theme.standardEasing } }
                                             }
                                         }
                                     }
@@ -1809,7 +1815,7 @@ PluginComponent {
                                         border.color: pidHeaderArea.containsMouse ? Theme.withAlpha(Theme.primary, 0.25) : "transparent"
                                         border.width: 1
                                         color: pidHeaderArea.containsMouse && parent.isSettled ? Theme.withAlpha(Theme.primary, 0.12) : "transparent"
-                                        Behavior on color { ColorAnimation { duration: 200 } }
+                                        Behavior on color { ColorAnimation { duration: Theme.shortDuration } }
                                     }
                                     Timer { running: pidHeaderArea.containsMouse; interval: 150; onTriggered: pidCol.isSettled = true }
 
@@ -1839,9 +1845,9 @@ PluginComponent {
                                                 size: 16 
                                                 color: Theme.primary 
                                                 opacity: processSection.sortCol === "pid" ? 1 : 0
-                                                Behavior on opacity { NumberAnimation { duration: 300 } }
+                                                Behavior on opacity { NumberAnimation { duration: Theme.shortDuration } }
                                                 rotation: processSection.sortAsc ? 180 : 0
-                                                Behavior on rotation { NumberAnimation { duration: 450; easing.type: Easing.OutBack } }
+                                                Behavior on rotation { NumberAnimation { duration: Theme.mediumDuration; easing.type: Theme.standardEasing } }
                                             }
                                         }
                                     }
@@ -1872,13 +1878,14 @@ PluginComponent {
                             clip: true
                             readonly property bool isExpanded: processSection.expandedPid === model.pid
                             
+
                             // Match official DMS height logic
                             height: isMatch ? (isExpanded ? (48 + expandedRect.height + Theme.spacingXS) : 48) : 0
                             opacity: isMatch ? 1 : 0
                             visible: height > 0
-                            
+
                             Behavior on height { NumberAnimation { duration: Theme.shortDuration; easing.type: Theme.standardEasing } }
-                            Behavior on opacity { NumberAnimation { duration: 350; easing.type: Easing.OutQuart } }
+                            Behavior on opacity { NumberAnimation { duration: Theme.shortDuration; easing.type: Theme.standardEasing } }
 
                             property bool isSettled: false
                             border.color: isSelected ? Qt.rgba(Theme.primary.r, Theme.primary.g, Theme.primary.b, 0.3) : (procMouseArea.containsMouse ? Theme.withAlpha(Theme.primary, 0.25) : "transparent")
@@ -1889,6 +1896,8 @@ PluginComponent {
                             Timer { running: procMouseArea.containsMouse; interval: 150; onTriggered: procDelegate.isSettled = true }
                             
                             Behavior on color { ColorAnimation { duration: 250 } }
+
+                            DankRipple { id: extRipple; cornerRadius: parent.radius }
 
                             property int visualIndex: -1
                             property bool isMatch: false
@@ -1958,6 +1967,7 @@ PluginComponent {
                                 hoverEnabled: true
                                 acceptedButtons: Qt.LeftButton | Qt.RightButton
                                 onExited: procDelegate.isSettled = false
+                                onPressed: extRipple.trigger(mouse.x, mouse.y)
                                 onClicked: {
                                     if (mouse.button === Qt.RightButton && root.contextMenuRef) {
                                         let globalPos = mapToItem(root.contextMenuRef.parent, mouse.x, mouse.y);
@@ -2068,8 +2078,8 @@ PluginComponent {
                                         color: procDelegate.isExpanded ? Theme.primary : Theme.surfaceVariantText
                                         anchors.centerIn: parent
                                         rotation: procDelegate.isExpanded ? 180 : 0
-                                        Behavior on rotation { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
-                                        Behavior on color { ColorAnimation { duration: 250 } }
+                                        Behavior on rotation { NumberAnimation { duration: Theme.mediumDuration; easing.type: Theme.standardEasing } }
+                                        Behavior on color { ColorAnimation { duration: Theme.shortDuration } }
                                     }
                                 }
                             }
@@ -2435,7 +2445,7 @@ PluginComponent {
                     color: root.getUsageColor(statCardRoot.progressValue)
 
                     Behavior on width {
-                        NumberAnimation { duration: 300; easing.type: Easing.OutCubic }
+                        NumberAnimation { duration: Theme.mediumDuration; easing.type: Theme.standardEasing }
                     }
                 }
             }
@@ -2630,6 +2640,8 @@ PluginComponent {
         property string text: ""
         signal clicked()
 
+        DankRipple { id: ripple; cornerRadius: itemRoot.radius }
+
         Row {
             anchors.fill: parent
             anchors.leftMargin: Theme.spacingS
@@ -2640,7 +2652,7 @@ PluginComponent {
                 size: 18
                 color: itemMouseArea.containsMouse ? itemRoot.hoverIconColor : Theme.surfaceVariantText
                 anchors.verticalCenter: parent.verticalCenter
-                Behavior on color { ColorAnimation { duration: 200 } }
+                Behavior on color { ColorAnimation { duration: Theme.shortDuration } }
             }
 
             StyledText {
@@ -2656,6 +2668,7 @@ PluginComponent {
             id: itemMouseArea
             anchors.fill: parent
             hoverEnabled: true
+            onPressed: ripple.trigger(mouse.x, mouse.y)
             onClicked: itemRoot.clicked()
         }
     }
