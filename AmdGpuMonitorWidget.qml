@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Layouts
 import Quickshell
 import Quickshell.Io
 
@@ -8,7 +9,9 @@ import qs.Modules.Plugins
 
 PluginComponent {
     id: root
-    
+    pluginId: "amdGpuMonitorRevive"
+
+    property var contextMenuRef: null
     property real gpuUsage: 0.0
     property real vramUsed: 0.0
     property real vramTotal: 0.0
@@ -23,6 +26,7 @@ PluginComponent {
     property real mediaUsage: 0.0
     
     property int updateInterval: 4000
+    property var toggleProcessList
 
     property bool minimumWidth: pluginData.minimumWidth !== undefined ? pluginData.minimumWidth : false
     property string popoutStyle: pluginData.popoutStyle || "dmsExtended"
@@ -114,25 +118,65 @@ PluginComponent {
     }
     
     function getUsageColor(percent) {
-        if (percent > 90) return Theme.error;
-        if (percent > 70) return "#ffa500";
+        if (percent > 90) return Theme.tempDanger;
+        if (percent > 70) return Theme.tempWarning;
         return Theme.primary;
+    }
+
+    // Helper to extract fields from /proc/[pid]/status
+    function extractProcField(text, fieldName) {
+        if (!text) return "";
+        const lines = text.split("\n");
+        for (let line of lines) {
+            if (line.startsWith(fieldName + ":")) {
+                return line.split(":")[1].trim();
+            }
+        }
+        return "";
+    }
+
+    // Helper to format /proc/[pid]/cmdline (replaces null terminators with spaces)
+    function formatCmdline(text) {
+        if (!text) return "";
+        return text.replace(/\0/g, " ").trim();
     }
 
     horizontalBarPill: Component {
         Row {
-            spacing: Theme.spacingS
-            DankIcon { name: "dashboard"; size: root.iconSize; color: Theme.widgetIconColor; anchors.verticalCenter: parent.verticalCenter }
+            spacing: Theme.spacingXS
+            DankIcon { 
+                name: "dashboard"
+                size: Theme.barIconSize(root.barThickness, undefined, root.barConfig?.maximizeWidgetIcons, root.barConfig?.iconScale)
+                color: Theme.widgetIconColor
+                anchors.verticalCenter: parent.verticalCenter 
+            }
             Item {
+                id: textBox
                 anchors.verticalCenter: parent.verticalCenter
-                implicitWidth: root.minimumWidth ? Math.max(textBaseline.width, gpuText.paintedWidth) : gpuText.paintedWidth
+                implicitWidth: root.minimumWidth ? Math.max(textBaseline.width, gpuTextMeasure.width) : gpuTextMeasure.width
                 implicitHeight: gpuText.implicitHeight
                 width: implicitWidth; height: implicitHeight
-                StyledTextMetrics { id: textBaseline; font.pixelSize: Theme.fontSizeSmall; text: "88% | 8.8GiB" }
+                
+                StyledTextMetrics { 
+                    id: textBaseline
+                    font.pixelSize: Theme.barTextSize(root.barThickness, root.barConfig?.fontScale, root.barConfig?.maximizeWidgetText)
+                    text: "88% | 8.8GiB" 
+                }
+                
+                StyledTextMetrics {
+                    id: gpuTextMeasure
+                    font.pixelSize: Theme.barTextSize(root.barThickness, root.barConfig?.fontScale, root.barConfig?.maximizeWidgetText)
+                    text: gpuText.text
+                }
+                
                 StyledText {
-                    id: gpuText; anchors.fill: parent; font.pixelSize: Theme.fontSizeSmall; color: Theme.widgetTextColor
+                    id: gpuText; anchors.fill: parent
+                    font.pixelSize: Theme.barTextSize(root.barThickness, root.barConfig?.fontScale, root.barConfig?.maximizeWidgetText)
+                    color: Theme.widgetTextColor
                     text: `${root.gpuUsage.toFixed(0)}% | ${(root.vramUsed / 1024).toFixed(1)}GiB`
                     horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter
+                    wrapMode: Text.NoWrap
+                    elide: Text.ElideRight
                 }
             }
         }
@@ -144,16 +188,18 @@ PluginComponent {
 
             DankIcon {
                 name: "dashboard"
-                size: root.iconSize
+                size: Theme.barIconSize(root.barThickness, undefined, root.barConfig?.maximizeWidgetIcons, root.barConfig?.iconScale)
                 color: Theme.widgetIconColor
                 anchors.horizontalCenter: parent.horizontalCenter
             }
 
             StyledText {
                 text: `${root.gpuUsage.toFixed(0)}%`
-                font.pixelSize: Theme.fontSizeSmall
+                font.pixelSize: Theme.barTextSize(root.barThickness, root.barConfig?.fontScale, root.barConfig?.maximizeWidgetText)
                 color: Theme.widgetTextColor
                 anchors.horizontalCenter: parent.horizontalCenter
+                wrapMode: Text.NoWrap
+                elide: Text.ElideRight
             }
         }
     }
@@ -163,17 +209,36 @@ PluginComponent {
         PopoutComponent {
             id: popout
             
-            Loader {
-                // 2. REVERT THIS LINE: Back to parent.width
+            Item {
+                id: popoutContainer
                 width: parent.width
-                
-                sourceComponent: {
-                    switch (root.popoutStyle) {
-                        case "alt": return altStyleContent
-                        case "dms": return dmsStyleContent
-                        case "legacy": return legacyStyleContent
-                        case "dmsExtended": return dmsExtendedStyleContent
+                implicitHeight: popoutLoader.item ? popoutLoader.item.implicitHeight : 0
+
+                Loader {
+                    id: popoutLoader
+                    width: parent.width
+                    
+                    sourceComponent: {
+                        switch (root.popoutStyle) {
+                            case "alt": return altStyleContent
+                            case "dms": return dmsStyleContent
+                            case "legacy": return legacyStyleContent
+                            case "dmsExtended": return dmsExtendedStyleContent
+                        }
                     }
+                }
+
+                DankContextMenu {
+                    id: contextMenu
+                    Component.onCompleted: root.contextMenuRef = contextMenu
+                }
+
+                // Global mouse area to close menu when clicking outside
+                MouseArea {
+                    anchors.fill: parent
+                    enabled: contextMenu.visible
+                    onPressed: contextMenu.hide()
+                    z: 9998 
                 }
             }
         }
@@ -190,7 +255,7 @@ PluginComponent {
             Row {
                 width: parent.width; spacing: 8; height: 24
                 DankIcon { name: "memory"; size: 18; color: Theme.primary; anchors.verticalCenter: parent.verticalCenter }
-                StyledText { text: root.gpuName; font.pixelSize: 18; font.bold: true; color: Theme.surfaceText; anchors.verticalCenter: parent.verticalCenter }
+                StyledText { text: root.gpuName; font.pixelSize: Theme.fontSizeLarge; font.bold: true; color: Theme.surfaceText; anchors.verticalCenter: parent.verticalCenter }
             }
 
             // GPU Usage
@@ -360,6 +425,21 @@ PluginComponent {
                         color: Theme.surfaceContainer
                         radius: Theme.cornerRadius
 
+                        MouseArea {
+                            anchors.fill: parent
+                            acceptedButtons: Qt.LeftButton | Qt.RightButton
+                            onClicked: {
+                                if (mouse.button === Qt.RightButton && root.contextMenuRef) {
+                                    let globalPos = mapToItem(root.contextMenuRef.parent, mouse.x, mouse.y);
+                                    root.contextMenuRef.show(globalPos.x, globalPos.y, {
+                                        pid: modelData.pid,
+                                        name: modelData.name,
+                                        cmdline: modelData.name
+                                    }, false); // HIDDEN PID
+                                }
+                            }
+                        }
+
                         Row {
                             anchors.fill: parent
                             anchors.margins: Theme.spacingS
@@ -478,7 +558,7 @@ PluginComponent {
                     
                     StyledText { 
                         text: root.gpuName
-                        font.pixelSize: 16
+                        font.pixelSize: Theme.fontSizeMedium
                         font.bold: true
                         color: Theme.surfaceText
                         anchors.verticalCenter: parent.verticalCenter 
@@ -632,18 +712,16 @@ PluginComponent {
                         barColor: Theme.info
                     }
                 }
-            }
-
-            // Process list section
+            }            // Process list section (Synced with DMS)
             Rectangle {
                 visible: root.gfxUsage > 0 || root.memUsage > 0 || root.mediaUsage > 0
                 width: parent.width
-                height: processContent.height + Theme.spacingM * 2
+                height: altProcessItems.height + Theme.spacingM * 2
                 radius: Theme.cornerRadius
                 color: Theme.withAlpha(Theme.surfaceContainerHigh, Theme.popupTransparency)
 
                 Column {
-                    id: processContent
+                    id: altProcessItems
                     anchors.left: parent.left
                     anchors.right: parent.right
                     anchors.top: parent.top
@@ -667,6 +745,25 @@ PluginComponent {
                             color: Theme.surfaceVariantText
                             anchors.verticalCenter: parent.verticalCenter
                         }
+
+                        Item { width: Theme.spacingS; height: 1 }
+
+                        DankIcon {
+                            visible: !!root.toggleProcessList
+                            name: "open_in_new"
+                            size: Theme.fontSizeSmall
+                            color: Theme.surfaceVariantText
+                            opacity: altProcHeaderMouse.containsMouse ? 1 : 0.6
+                            anchors.verticalCenter: parent.verticalCenter
+                            
+                            MouseArea {
+                                id: altProcHeaderMouse
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: root.toggleProcessList()
+                            }
+                        }
                     }
 
                     DankListView {
@@ -677,21 +774,35 @@ PluginComponent {
                         clip: true
 
                         delegate: Rectangle {
+                            id: altProcDelegate
+                            clip: true
                             width: ListView.view.width
                             height: 44
                             radius: Theme.cornerRadius
-                            color: procMouseArea.containsMouse
+                            Behavior on height { NumberAnimation { duration: 300; easing.type: Easing.OutQuart } }
+                            color: altProcMouseArea.containsMouse
                                 ? Qt.rgba(Theme.primary.r, Theme.primary.g, Theme.primary.b, 0.06)
                                 : "transparent"
-                            border.color: procMouseArea.containsMouse
+                            border.color: altProcMouseArea.containsMouse
                                 ? Qt.rgba(Theme.primary.r, Theme.primary.g, Theme.primary.b, 0.12)
                                 : "transparent"
                             border.width: 1
 
                             MouseArea {
-                                id: procMouseArea
+                                id: altProcMouseArea
                                 anchors.fill: parent
                                 hoverEnabled: true
+                                acceptedButtons: Qt.LeftButton | Qt.RightButton
+                                onClicked: {
+                                    if (mouse.button === Qt.RightButton && root.contextMenuRef) {
+                                        let globalPos = mapToItem(root.contextMenuRef.parent, mouse.x, mouse.y);
+                                        root.contextMenuRef.show(globalPos.x, globalPos.y, {
+                                            pid: modelData.pid,
+                                            name: modelData.name,
+                                            cmdline: modelData.name
+                                        }, false); // HIDDEN PID
+                                    }
+                                }
                             }
 
                             Row {
@@ -702,7 +813,7 @@ PluginComponent {
 
                                 // Process name column
                                 Item {
-                                    width: parent.width - vramBadge.width - gfxBadge.width - cpuBadge.width - Theme.spacingS * 3
+                                    width: parent.width - altVramBadge.width - altGfxBadge.width - altCpuBadge.width - Theme.spacingS * 3
                                     height: parent.height
 
                                     Row {
@@ -720,7 +831,6 @@ PluginComponent {
 
                                         Column {
                                             anchors.verticalCenter: parent.verticalCenter
-                                            spacing: 2
 
                                             StyledText {
                                                 text: modelData.name
@@ -730,19 +840,13 @@ PluginComponent {
                                                 elide: Text.ElideRight
                                                 width: Math.min(implicitWidth, 120)
                                             }
-
-                                            StyledText {
-                                                text: `PID: ${modelData.pid}`
-                                                font.pixelSize: Theme.fontSizeSmall - 2
-                                                color: Theme.surfaceVariantText
-                                            }
                                         }
                                     }
                                 }
 
                                 // VRAM badge
                                 Rectangle {
-                                    id: vramBadge
+                                    id: altVramBadge
                                     width: 95
                                     height: 24
                                     radius: Theme.cornerRadius
@@ -772,7 +876,7 @@ PluginComponent {
 
                                 // GFX badge
                                 Rectangle {
-                                    id: gfxBadge
+                                    id: altGfxBadge
                                     width: 64
                                     height: 24
                                     radius: Theme.cornerRadius
@@ -804,7 +908,7 @@ PluginComponent {
 
                                 // CPU badge
                                 Rectangle {
-                                    id: cpuBadge
+                                    id: altCpuBadge
                                     width: 64
                                     height: 24
                                     radius: Theme.cornerRadius
@@ -868,7 +972,7 @@ PluginComponent {
                     
                     StyledText { 
                         text: root.gpuName
-                        font.pixelSize: 16
+                        font.pixelSize: Theme.fontSizeMedium
                         font.bold: true
                         color: Theme.surfaceText
                         anchors.verticalCenter: parent.verticalCenter 
@@ -894,7 +998,7 @@ PluginComponent {
                         value: root.gpuUsage / 100
                         label: root.gpuUsage.toFixed(0) + "%"
                         sublabel: "GPU"
-                        accentColor: root.gpuUsage > 80 ? Theme.error : (root.gpuUsage > 50 ? Theme.warning : Theme.primary)
+                        accentColor: root.getUsageColor(root.gpuUsage)
                     }
 
                     CircleGauge {
@@ -904,7 +1008,7 @@ PluginComponent {
                         label: (root.vramUsed / 1024).toFixed(1) + " GiB"
                         sublabel: "VRAM"
                         detail: root.vramPercent.toFixed(0) + "%"
-                        accentColor: root.vramPercent > 90 ? Theme.error : (root.vramPercent > 70 ? Theme.warning : Theme.secondary)
+                        accentColor: root.getUsageColor(root.vramPercent)
                     }
 
                     CircleGauge {
@@ -915,7 +1019,7 @@ PluginComponent {
                         label: root.temperature + "°C"
                         sublabel: "Temp"
                         detail: root.powerUsage > 0 ? (root.powerUsage + "W") : ""
-                        accentColor: root.temperature > 85 ? Theme.error : (root.temperature > 70 ? Theme.warning : Theme.info)
+                        accentColor: root.temperature > 85 ? Theme.tempDanger : (root.temperature > 70 ? Theme.tempWarning : Theme.info)
                         detailColor: Theme.surfaceVariantText
                     }
                 }
@@ -990,6 +1094,7 @@ PluginComponent {
                 Column {
                     id: processContent
                     anchors.left: parent.left
+
                     anchors.right: parent.right
                     anchors.top: parent.top
                     anchors.margins: Theme.spacingM
@@ -1012,6 +1117,25 @@ PluginComponent {
                             color: Theme.surfaceVariantText
                             anchors.verticalCenter: parent.verticalCenter
                         }
+
+                        Item { width: Theme.spacingS; height: 1 }
+
+                        DankIcon {
+                            visible: !!root.toggleProcessList
+                            name: "open_in_new"
+                            size: Theme.fontSizeSmall
+                            color: Theme.surfaceVariantText
+                            opacity: procHeaderMouse.containsMouse ? 1 : 0.6
+                            anchors.verticalCenter: parent.verticalCenter
+                            
+                            MouseArea {
+                                id: procHeaderMouse
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: root.toggleProcessList()
+                            }
+                        }
                     }
 
                     DankListView {
@@ -1022,21 +1146,35 @@ PluginComponent {
                         clip: true
 
                         delegate: Rectangle {
+                            id: procStyleDelegate
+                            clip: true
                             width: ListView.view.width
                             height: 44
                             radius: Theme.cornerRadius
-                            color: procMouseArea.containsMouse
+                            Behavior on height { NumberAnimation { duration: 300; easing.type: Easing.OutQuart } }
+                            color: dmsProcMouseArea.containsMouse
                                 ? Qt.rgba(Theme.primary.r, Theme.primary.g, Theme.primary.b, 0.06)
                                 : "transparent"
-                            border.color: procMouseArea.containsMouse
+                            border.color: dmsProcMouseArea.containsMouse
                                 ? Qt.rgba(Theme.primary.r, Theme.primary.g, Theme.primary.b, 0.12)
                                 : "transparent"
                             border.width: 1
 
                             MouseArea {
-                                id: procMouseArea
+                                id: dmsProcMouseArea
                                 anchors.fill: parent
                                 hoverEnabled: true
+                                acceptedButtons: Qt.LeftButton | Qt.RightButton
+                                onClicked: {
+                                    if (mouse.button === Qt.RightButton && root.contextMenuRef) {
+                                        let globalPos = mapToItem(root.contextMenuRef.parent, mouse.x, mouse.y);
+                                        root.contextMenuRef.show(globalPos.x, globalPos.y, {
+                                            pid: modelData.pid,
+                                            name: modelData.name,
+                                            cmdline: modelData.name
+                                        }, false); // HIDDEN PID
+                                    }
+                                }
                             }
 
                             Row {
@@ -1065,7 +1203,6 @@ PluginComponent {
 
                                         Column {
                                             anchors.verticalCenter: parent.verticalCenter
-                                            spacing: 2
 
                                             StyledText {
                                                 text: modelData.name
@@ -1074,12 +1211,6 @@ PluginComponent {
                                                 color: Theme.surfaceText
                                                 elide: Text.ElideRight
                                                 width: Math.min(implicitWidth, 120)
-                                            }
-
-                                            StyledText {
-                                                text: `PID: ${modelData.pid}`
-                                                font.pixelSize: Theme.fontSizeSmall - 2
-                                                color: Theme.surfaceVariantText
                                             }
                                         }
                                     }
@@ -1176,6 +1307,7 @@ PluginComponent {
                                         }
                                     }
                                 }
+
                             }
                         }
                     }
@@ -1185,7 +1317,7 @@ PluginComponent {
     }
 
 
-// ==========================================
+    // ==========================================
     // DMS EXTENDED STYLE (Advanced Dashboard)
     // ==========================================
     Component {
@@ -1218,7 +1350,26 @@ PluginComponent {
                         anchors.verticalCenter: parent.verticalCenter
                         spacing: Theme.spacingS
                         DankIcon { name: "dashboard"; size: 24; color: Theme.primary; anchors.verticalCenter: parent.verticalCenter }
-                        StyledText { text: "Processes"; font.pixelSize: 16; font.weight: Font.Bold; color: Theme.surfaceText; anchors.verticalCenter: parent.verticalCenter }
+                        StyledText { text: "Processes"; font.pixelSize: Theme.fontSizeMedium; font.weight: Font.Bold; color: Theme.surfaceText; anchors.verticalCenter: parent.verticalCenter }
+                        
+                        Item { width: Theme.spacingS; height: 1 }
+
+                        DankIcon {
+                            visible: !!root.toggleProcessList
+                            name: "open_in_new"
+                            size: 20
+                            color: Theme.primary
+                            opacity: extendedProcHeaderMouse.containsMouse ? 1 : 0.6
+                            anchors.verticalCenter: parent.verticalCenter
+                            
+                            MouseArea {
+                                id: extendedProcHeaderMouse
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: root.toggleProcessList()
+                            }
+                        }
                     }
 
                     // Native DankButtonGroup
@@ -1292,12 +1443,12 @@ PluginComponent {
                     Column {
                         anchors.verticalCenter: parent.verticalCenter
                         spacing: 2
-                        StyledText { text: "GPU"; font.pixelSize: 22; font.weight: Font.Bold; color: Theme.surfaceText } 
-                        StyledText { text: root.gpuName; font.pixelSize: 13; color: Theme.surfaceVariantText }
+                        StyledText { text: "GPU"; font.pixelSize: Theme.fontSizeLarge * 1.2; font.weight: Font.Bold; color: Theme.surfaceText } 
+                        StyledText { text: root.gpuName; font.pixelSize: Theme.fontSizeSmall; color: Theme.surfaceVariantText }
                         Row {
                             spacing: Theme.spacingS
                             DankIcon { name: "memory"; size: 12; color: Theme.surfaceVariantText; anchors.verticalCenter: parent.verticalCenter }
-                            StyledText { text: root.processes.length + " procs"; font.pixelSize: 12; color: Theme.surfaceVariantText; anchors.verticalCenter: parent.verticalCenter }
+                            StyledText { text: root.processes.length + " procs"; font.pixelSize: Theme.fontSizeSmall - 1; color: Theme.surfaceVariantText; anchors.verticalCenter: parent.verticalCenter }
                         }
                     }
                 }
@@ -1330,7 +1481,7 @@ PluginComponent {
                         label: root.temperature + "°C"
                         sublabel: "Temp"
                         detail: root.powerUsage > 0 ? (root.powerUsage + "W") : ""
-                        accentColor: root.temperature > 85 ? Theme.error : (root.temperature > 70 ? Theme.warning : Theme.info)
+                        accentColor: root.temperature > 85 ? Theme.tempDanger : (root.temperature > 70 ? Theme.tempWarning : Theme.info)
                     }
                 }
             }
@@ -1370,8 +1521,13 @@ PluginComponent {
                 height: 380 
                 radius: Theme.cornerRadius
                 color: Theme.withAlpha(Theme.surfaceContainerHigh, Theme.popupTransparency)
+                
+                FileView { id: cmdViewExt; path: "/proc/" + processSection.expandedPid + "/cmdline" }
+                FileView { id: statViewExt; path: "/proc/" + processSection.expandedPid + "/status" }
+                FileView { id: memInfoView; path: "/proc/meminfo" }
 
                 property real usableW: width - (Theme.spacingM * 2)
+
                 property real nameW: (usableW - 24) * 0.5   
                 property real statW: (usableW - 24) * 0.5 / 3 
 
@@ -1380,6 +1536,7 @@ PluginComponent {
                 property string searchText: ""
                 property int filterMode: 0 
                 property int matchCount: 0
+                property int expandedPid: -1
 
                 signal triggerRecalc()
 
@@ -1517,7 +1674,7 @@ PluginComponent {
                                     spacing: 6
                                     StyledText { 
                                         text: "Name"
-                                        font.pixelSize: 14 
+                                        font.pixelSize: Theme.fontSizeSmall 
                                         // FIX: Use Font.Black for heavy boldness
                                         font.weight: processSection.sortCol === "name" ? Font.Black : Font.Medium
                                         color: processSection.sortCol === "name" ? Theme.primary : Theme.surfaceVariantText 
@@ -1572,7 +1729,7 @@ PluginComponent {
                                         spacing: 6
                                         StyledText { 
                                             text: "GPU"
-                                            font.pixelSize: 14 
+                                            font.pixelSize: Theme.fontSizeSmall 
                                             font.weight: processSection.sortCol === "gpu" ? Font.Black : Font.Medium
                                             color: processSection.sortCol === "gpu" ? Theme.primary : Theme.surfaceVariantText 
                                         }
@@ -1621,7 +1778,7 @@ PluginComponent {
                                         spacing: 6
                                         StyledText { 
                                             text: "Memory"
-                                            font.pixelSize: 14 
+                                            font.pixelSize: Theme.fontSizeSmall 
                                             font.weight: processSection.sortCol === "vram" ? Font.Black : Font.Medium
                                             color: processSection.sortCol === "vram" ? Theme.primary : Theme.surfaceVariantText 
                                         }
@@ -1670,7 +1827,7 @@ PluginComponent {
                                         spacing: 6
                                         StyledText { 
                                             text: "PID"
-                                            font.pixelSize: 14 
+                                            font.pixelSize: Theme.fontSizeSmall 
                                             font.weight: processSection.sortCol === "pid" ? Font.Black : Font.Medium
                                             color: processSection.sortCol === "pid" ? Theme.primary : Theme.surfaceVariantText 
                                         }
@@ -1696,211 +1853,357 @@ PluginComponent {
                     }
 
                     // GLIDING LIST VIEW
-                    DankFlickable {
-                        id: processFlickable
+                    ListView {
+                        id: processListView
                         anchors.top: tableHeader.bottom
                         anchors.topMargin: Theme.spacingM
                         anchors.left: parent.left
                         anchors.right: parent.right
                         anchors.bottom: parent.bottom
-                        clip: true 
-                        
-                        contentHeight: processSection.matchCount * 50
-                        Behavior on contentHeight { NumberAnimation { duration: 500; easing.type: Easing.OutQuart } }
+                        clip: true
+                        model: stableModel
+                        spacing: 2
+                        boundsBehavior: Flickable.StopAtBounds
 
-                        Item {
-                            width: processFlickable.width
-                            height: processFlickable.contentHeight
+                        delegate: Rectangle {
+                            id: procDelegate
+                            width: ListView.view.width
+                            radius: Theme.cornerRadius
+                            clip: true
+                            readonly property bool isExpanded: processSection.expandedPid === model.pid
+                            
+                            // Match official DMS height logic
+                            height: isMatch ? (isExpanded ? (48 + expandedRect.height + Theme.spacingXS) : 48) : 0
+                            opacity: isMatch ? 1 : 0
+                            visible: height > 0
+                            
+                            Behavior on height { NumberAnimation { duration: Theme.shortDuration; easing.type: Theme.standardEasing } }
+                            Behavior on opacity { NumberAnimation { duration: 350; easing.type: Easing.OutQuart } }
 
-                            Repeater {
-                                model: stableModel
-                                delegate: Rectangle {
-                                    id: procDelegate
-                                    width: parent.width
-                                    radius: Theme.cornerRadius
+                            property bool isSettled: false
+                            border.color: isSelected ? Qt.rgba(Theme.primary.r, Theme.primary.g, Theme.primary.b, 0.3) : (procMouseArea.containsMouse ? Theme.withAlpha(Theme.primary, 0.25) : "transparent")
+                            border.width: 1
+                            color: isSelected ? Qt.rgba(Theme.primary.r, Theme.primary.g, Theme.primary.b, 0.15) : (procMouseArea.containsMouse && isSettled ? Theme.withAlpha(Theme.surfaceText, 0.06) : "transparent")
+                            readonly property bool isSelected: processSection.expandedPid === model.pid // Official matches expanded to "selected" visual
 
-                                    property bool isSettled: false
-                                    // FIX: Reduced border opacity to match settled fill strength
-                                    border.color: procMouseArea.containsMouse ? Theme.withAlpha(Theme.primary, 0.25) : "transparent"
-                                    border.width: 1
-                                    color: procMouseArea.containsMouse && isSettled ? Theme.withAlpha(Theme.surfaceText, 0.06) : "transparent"
+                            Timer { running: procMouseArea.containsMouse; interval: 150; onTriggered: procDelegate.isSettled = true }
+                            
+                            Behavior on color { ColorAnimation { duration: 250 } }
 
-                                    Timer { running: procMouseArea.containsMouse; interval: 150; onTriggered: procDelegate.isSettled = true }
+                            property int visualIndex: -1
+                            property bool isMatch: false
 
-                                    height: isMatch ? 48 : 0
-                                    opacity: isMatch ? 1 : 0
-                                    visible: height > 0 || opacity > 0
+                            function computeRank() {
+                                let myP = stableModel.get(index);
+                                if (!myP) return;
+
+                                let systemProcs = ["xorg", "xwayland", "wayland", "kwin", "kwin_wayland", "kwin_x11", "niri", "hyprland", "plasmashell", "sddm", "gdm", "systemd"];
+                                let myIsSys = systemProcs.some(sys => myP.name.toLowerCase().includes(sys));
+                                let myMatchF = processSection.filterMode === 0 || (processSection.filterMode === 1 && !myIsSys) || (processSection.filterMode === 2 && myIsSys);
+                                let myMatchS = processSection.searchText === "" || myP.name.toLowerCase().includes(processSection.searchText.toLowerCase()) || myP.pid.toString().includes(processSection.searchText);
+                                
+                                isMatch = myMatchF && myMatchS;
+                                
+                                if (!isMatch) {
+                                    visualIndex = -1;
+                                    return;
+                                }
+
+                                let rank = 0;
+                                let myVal;
+                                if (processSection.sortCol === "name") myVal = myP.name.toLowerCase();
+                                else if (processSection.sortCol === "gpu") myVal = myP.gfx;
+                                else if (processSection.sortCol === "vram") myVal = myP.vram * (myP.vramUnit === "GiB" ? 1024 : 1);
+                                else if (processSection.sortCol === "pid") myVal = myP.pid;
+
+                                for (let i = 0; i < stableModel.count; i++) {
+                                    if (i === index) continue;
+                                    let otherP = stableModel.get(i);
                                     
-                                    y: Math.max(0, visualIndex * 50)
+                                    let otherIsSys = systemProcs.some(sys => otherP.name.toLowerCase().includes(sys));
+                                    let otherMatchF = processSection.filterMode === 0 || (processSection.filterMode === 1 && !otherIsSys) || (processSection.filterMode === 2 && otherIsSys);
+                                    let otherMatchS = processSection.searchText === "" || otherP.name.toLowerCase().includes(processSection.searchText.toLowerCase()) || otherP.pid.toString().includes(processSection.searchText);
+                                    
+                                    if (otherMatchF && otherMatchS) {
+                                        let otherVal;
+                                        if (processSection.sortCol === "name") otherVal = otherP.name.toLowerCase();
+                                        else if (processSection.sortCol === "gpu") otherVal = otherP.gfx;
+                                        else if (processSection.sortCol === "vram") otherVal = otherP.vram * (otherP.vramUnit === "GiB" ? 1024 : 1);
+                                        else if (processSection.sortCol === "pid") otherVal = otherP.pid;
 
-                                    Behavior on color { ColorAnimation { duration: 250 } }
-                                    Behavior on y { NumberAnimation { duration: 550; easing.type: Easing.OutQuart } }
-                                    Behavior on height { NumberAnimation { duration: 450; easing.type: Easing.OutQuart } }
-                                    Behavior on opacity { NumberAnimation { duration: 350; easing.type: Easing.OutQuart } }
+                                        let isSmaller;
+                                        if (processSection.sortCol === "name") isSmaller = myVal < otherVal;
+                                        else isSmaller = myVal > otherVal;
 
-                                    property int visualIndex: -1
-                                    property bool isMatch: false
+                                        if (processSection.sortAsc) isSmaller = !isSmaller;
 
-                                    function computeRank() {
-                                        let myP = stableModel.get(index);
-                                        if (!myP) return;
+                                        if (isSmaller) rank++;
+                                        else if (myVal === otherVal && index > i) rank++; 
+                                    }
+                                }
+                                visualIndex = rank;
+                            }
 
-                                        let systemProcs = ["xorg", "xwayland", "wayland", "kwin", "kwin_wayland", "kwin_x11", "niri", "hyprland", "plasmashell", "sddm", "gdm", "systemd"];
-                                        let myIsSys = systemProcs.some(sys => myP.name.toLowerCase().includes(sys));
-                                        let myMatchF = processSection.filterMode === 0 || (processSection.filterMode === 1 && !myIsSys) || (processSection.filterMode === 2 && myIsSys);
-                                        let myMatchS = processSection.searchText === "" || myP.name.toLowerCase().includes(processSection.searchText.toLowerCase()) || myP.pid.toString().includes(processSection.searchText);
+                            Connections {
+                                target: processSection
+                                function onTriggerRecalc() { computeRank(); }
+                            }
+                            Component.onCompleted: {
+                                computeRank();
+                            }
+
+                            MouseArea {
+                                id: procMouseArea
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                acceptedButtons: Qt.LeftButton | Qt.RightButton
+                                onExited: procDelegate.isSettled = false
+                                onClicked: {
+                                    if (mouse.button === Qt.RightButton && root.contextMenuRef) {
+                                        let globalPos = mapToItem(root.contextMenuRef.parent, mouse.x, mouse.y);
+                                        root.contextMenuRef.show(globalPos.x, globalPos.y, {
+                                            pid: model.pid,
+                                            name: model.name,
+                                            cmdline: root.formatCmdline(cmdViewExt.text()) || model.name
+                                        });
+                                    } else {
+                                        processSection.expandedPid = isExpanded ? -1 : model.pid
+                                    }
+                                }
+                            }
+                            Row {
+                                width: parent.width
+                                height: 48
+
+                                Item {
+                                    width: processSection.nameW
+                                    height: parent.height
+                                    Row {
+                                        anchors.left: parent.left
+                                        anchors.leftMargin: Theme.spacingS
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        spacing: 12
                                         
-                                        isMatch = myMatchF && myMatchS;
-                                        
-                                        if (!isMatch) {
-                                            visualIndex = -1;
-                                            return;
+                                        DankIcon { 
+                                            name: "developer_board" 
+                                            size: 16 
+                                            color: Theme.surfaceVariantText
+                                            anchors.verticalCenter: parent.verticalCenter 
                                         }
+                                        
+                                        StyledText { 
+                                            text: model.name
+                                            font.pixelSize: Theme.fontSizeSmall - 1
+                                            font.weight: Font.Medium
+                                            color: Theme.surfaceText
+                                            elide: Text.ElideRight
+                                            width: Math.min(implicitWidth, processSection.nameW - 40)
+                                            anchors.verticalCenter: parent.verticalCenter 
+                                        }
+                                    }
+                                }
 
-                                        let rank = 0;
-                                        let myVal;
-                                        if (processSection.sortCol === "name") myVal = myP.name.toLowerCase();
-                                        else if (processSection.sortCol === "gpu") myVal = myP.gfx;
-                                        else if (processSection.sortCol === "vram") myVal = myP.vram * (myP.vramUnit === "GiB" ? 1024 : 1);
-                                        else if (processSection.sortCol === "pid") myVal = myP.pid;
+                                Row {
+                                    width: parent.width * 0.5 - 24
+                                    height: parent.height
 
-                                        for (let i = 0; i < stableModel.count; i++) {
-                                            if (i === index) continue;
-                                            let otherP = stableModel.get(i);
-                                            
-                                            let otherIsSys = systemProcs.some(sys => otherP.name.toLowerCase().includes(sys));
-                                            let otherMatchF = processSection.filterMode === 0 || (processSection.filterMode === 1 && !otherIsSys) || (processSection.filterMode === 2 && otherIsSys);
-                                            let otherMatchS = processSection.searchText === "" || otherP.name.toLowerCase().includes(processSection.searchText.toLowerCase()) || otherP.pid.toString().includes(processSection.searchText);
-                                            
-                                            if (otherMatchF && otherMatchS) {
-                                                let otherVal;
-                                                if (processSection.sortCol === "name") otherVal = otherP.name.toLowerCase();
-                                                else if (processSection.sortCol === "gpu") otherVal = otherP.gfx;
-                                                else if (processSection.sortCol === "vram") otherVal = otherP.vram * (otherP.vramUnit === "GiB" ? 1024 : 1);
-                                                else if (processSection.sortCol === "pid") otherVal = otherP.pid;
-
-                                                let comesAfter = false;
-                                                if (myVal > otherVal) comesAfter = processSection.sortAsc ? true : false;
-                                                else if (myVal < otherVal) comesAfter = processSection.sortAsc ? false : true;
-                                                else {
-                                                    if (myP.pid > otherP.pid) comesAfter = processSection.sortAsc ? true : false;
-                                                    else if (myP.pid < otherP.pid) comesAfter = processSection.sortAsc ? false : true;
-                                                    else if (index > i) comesAfter = true;
-                                                }
-
-                                                if (comesAfter) rank++;
+                                    Item {
+                                        width: processSection.statW
+                                        height: parent.height
+                                        Rectangle {
+                                            width: 70; height: 24; radius: Theme.cornerRadius
+                                            anchors.centerIn: parent
+                                            color: Theme.withAlpha(root.getUsageColor(model.gfx), 0.15)
+                                            StyledText {
+                                                anchors.centerIn: parent
+                                                text: model.gfx > 0 ? `${model.gfx.toFixed(0)}%` : "0%"
+                                                font.pixelSize: Theme.fontSizeSmall - 2
+                                                font.weight: Font.Bold
+                                                color: root.getUsageColor(model.gfx)
                                             }
                                         }
-                                        visualIndex = rank;
                                     }
 
-                                    Connections {
-                                        target: processSection
-                                        function onTriggerRecalc() { computeRank(); }
-                                    }
-                                    Component.onCompleted: {
-                                        computeRank();
-                                        y = Math.max(0, visualIndex * 50); 
-                                    }
-
-                                    MouseArea { id: procMouseArea; anchors.fill: parent; hoverEnabled: true; onExited: procDelegate.isSettled = false }
-
-                                    Row {
-                                        width: parent.width
+                                    Item {
+                                        width: processSection.statW
                                         height: parent.height
+                                        Rectangle {
+                                            width: 70; height: 24; radius: Theme.cornerRadius
+                                            anchors.centerIn: parent
+                                            property real procVramPercent: root.vramTotal > 0 ? ((model.vramUnit === "GiB" ? model.vram * 1024 : model.vram) / root.vramTotal * 100) : 0
+                                            color: Theme.withAlpha(root.getUsageColor(procVramPercent), 0.15)
+                                            StyledText {
+                                                anchors.centerIn: parent
+                                                font.pixelSize: Theme.fontSizeSmall - 2
+                                                font.weight: Font.Bold
+                                                text: {
+                                                    let v = model.vram;
+                                                    let u = model.vramUnit;
+                                                    if (u === "MiB" && v > 1000) return (v / 1024).toFixed(1) + " GB";
+                                                    return v + " " + (u === "MiB" ? "MB" : "GB");
+                                                }
+                                                color: root.getUsageColor(parent.procVramPercent)
+                                            }
+                                        }
+                                    }
 
-                                        Item {
-                                            width: processSection.nameW
-                                            height: parent.height
-                                            Row {
-                                                anchors.left: parent.left
-                                                anchors.leftMargin: Theme.spacingS
+                                    Item {
+                                        width: processSection.statW
+                                        height: parent.height
+                                        StyledText {
+                                            anchors.centerIn: parent
+                                            text: model.pid
+                                            font.pixelSize: Theme.fontSizeSmall - 1
+                                            color: Theme.surfaceVariantText
+                                        }
+                                    }
+                                }
+
+                                Item {
+                                    width: 24
+                                    height: parent.height
+                                    DankIcon {
+                                        name: "expand_more"
+                                        size: 18
+                                        color: procDelegate.isExpanded ? Theme.primary : Theme.surfaceVariantText
+                                        anchors.centerIn: parent
+                                        rotation: procDelegate.isExpanded ? 180 : 0
+                                        Behavior on rotation { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
+                                        Behavior on color { ColorAnimation { duration: 250 } }
+                                    }
+                                }
+                            }
+
+                            // Details Section - MATCHING OFFICIAL DMS STYLE
+                            Rectangle {
+                                id: expandedRect
+                                width: parent.width - Theme.spacingM * 2
+                                height: procDelegate.isExpanded ? (expandedContent.implicitHeight + Theme.spacingS * 2) : 0
+                                anchors.top: parent.top
+                                anchors.topMargin: 48
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                radius: Theme.cornerRadius - 2
+                                color: Qt.rgba(Theme.surfaceContainerHigh.r, Theme.surfaceContainerHigh.g, Theme.surfaceContainerHigh.b, 0.6)
+                                clip: true
+                                visible: procDelegate.isExpanded
+                                
+                                Behavior on height { NumberAnimation { duration: Theme.shortDuration; easing.type: Theme.standardEasing } }
+                                opacity: procDelegate.isExpanded ? 1 : 0
+                                Behavior on opacity { NumberAnimation { duration: 200 } }
+
+                                Column {
+                                    id: expandedContent
+                                    anchors.left: parent.left
+                                    anchors.right: parent.right
+                                    anchors.top: parent.top
+                                    anchors.margins: Theme.spacingS
+                                    spacing: Theme.spacingXS
+
+                                    // Full Command Row
+                                    RowLayout {
+                                        width: parent.width
+                                        spacing: Theme.spacingS
+                                        
+                                        StyledText {
+                                            text: "Full Command:"
+                                            font.pixelSize: Theme.fontSizeSmall - 2
+                                            font.weight: Font.Bold
+                                            color: Theme.surfaceVariantText
+                                            Layout.alignment: Qt.AlignVCenter
+                                        }
+
+                                        StyledText {
+                                            id: cmdText
+                                            Layout.fillWidth: true
+                                            text: root.formatCmdline(cmdViewExt.text()) || model.name
+                                            font.pixelSize: Theme.fontSizeSmall - 2
+                                            font.family: "Monospace"
+                                            color: Theme.surfaceText
+                                            elide: Text.ElideMiddle
+                                            Layout.alignment: Qt.AlignVCenter
+                                        }
+
+                                        Rectangle {
+                                            id: copyBtn
+                                            Layout.preferredWidth: 24
+                                            Layout.preferredHeight: 24
+                                            radius: Theme.cornerRadius - 2
+                                            color: copyMouseArea.containsMouse ? Theme.withAlpha(Theme.primary, 0.15) : "transparent"
+                                            Layout.alignment: Qt.AlignVCenter
+                                            
+                                            DankIcon {
+                                                anchors.centerIn: parent
+                                                name: "content_copy"
+                                                size: 14
+                                                color: copyMouseArea.containsMouse ? Theme.primary : Theme.surfaceVariantText
+                                            }
+
+                                            MouseArea {
+                                                id: copyMouseArea
+                                                anchors.fill: parent
+                                                hoverEnabled: true
+                                                cursorShape: Qt.PointingHandCursor
+                                                onClicked: {
+                                                    try {
+                                                        Quickshell.execDetached(["dms", "cl", "copy", cmdText.text]);
+                                                    } catch(e) {
+                                                        console.log("Clipboard copy failed:", e);
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    // System Stats Row
+                                    Row {
+                                        spacing: Theme.spacingL
+                                        height: childrenRect.height
+                                        
+                                        Row {
+                                            spacing: Theme.spacingXS
+                                            anchors.verticalCenter: parent.verticalCenter
+                                            StyledText {
+                                                text: "PPID:"
+                                                font.pixelSize: Theme.fontSizeSmall - 2
+                                                font.weight: Font.Bold
+                                                color: Theme.surfaceVariantText
                                                 anchors.verticalCenter: parent.verticalCenter
-                                                spacing: 12
-                                                
-                                                DankIcon { 
-                                                    name: "developer_board" 
-                                                    size: 16 
-                                                    color: Theme.surfaceVariantText
-                                                    anchors.verticalCenter: parent.verticalCenter 
-                                                }
-                                                
-                                                StyledText { 
-                                                    text: model.name
-                                                    font.pixelSize: 13 
-                                                    font.weight: Font.Medium
-                                                    color: Theme.surfaceText
-                                                    elide: Text.ElideRight
-                                                    width: Math.min(implicitWidth, processSection.nameW - 40)
-                                                    anchors.verticalCenter: parent.verticalCenter 
-                                                }
+                                            }
+                                            StyledText {
+                                                text: root.extractProcField(statViewExt.text(), "PPid") || "--"
+                                                font.pixelSize: Theme.fontSizeSmall - 2
+                                                font.family: "Monospace"
+                                                color: Theme.surfaceText
+                                                anchors.verticalCenter: parent.verticalCenter
                                             }
                                         }
 
                                         Row {
-                                            width: parent.width * 0.5 - 24
-                                            height: parent.height
-
-                                            Item {
-                                                width: processSection.statW
-                                                height: parent.height
-                                                Rectangle {
-                                                    width: 54; height: 24; radius: height / 2
-                                                    anchors.centerIn: parent
-                                                    color: Theme.withAlpha(root.getUsageColor(model.gfx), 0.15)
-                                                    StyledText {
-                                                        anchors.centerIn: parent
-                                                        text: model.gfx > 0 ? `${model.gfx.toFixed(0)}%` : "0%"
-                                                        font.pixelSize: 11
-                                                        font.weight: Font.Bold
-                                                        color: root.getUsageColor(model.gfx)
-                                                    }
-                                                }
-                                            }
-
-                                            Item {
-                                                width: processSection.statW
-                                                height: parent.height
-                                                Rectangle {
-                                                    width: 62; height: 24; radius: height / 2
-                                                    anchors.centerIn: parent
-                                                    property real procVramPercent: root.vramTotal > 0 ? ((model.vramUnit === "GiB" ? model.vram * 1024 : model.vram) / root.vramTotal * 100) : 0
-                                                    color: Theme.withAlpha(root.getUsageColor(procVramPercent), 0.15)
-                                                    StyledText {
-                                                        anchors.centerIn: parent
-                                                        font.pixelSize: 11
-                                                        font.weight: Font.Bold
-                                                        text: {
-                                                            let v = model.vram;
-                                                            let u = model.vramUnit;
-                                                            if (u === "MiB" && v > 1000) return (v / 1024).toFixed(1) + " GB";
-                                                            return v + " " + (u === "MiB" ? "MB" : "GB");
-                                                        }
-                                                        color: root.getUsageColor(parent.procVramPercent)
-                                                    }
-                                                }
-                                            }
-
-                                            Item {
-                                                width: processSection.statW
-                                                height: parent.height
-                                                StyledText {
-                                                    anchors.centerIn: parent
-                                                    text: model.pid
-                                                    font.pixelSize: 12
-                                                    color: Theme.surfaceVariantText
-                                                }
-                                            }
-                                        }
-
-                                        Item {
-                                            width: 24
-                                            height: parent.height
-                                            DankIcon {
-                                                name: "expand_more"
-                                                size: 18
+                                            spacing: Theme.spacingXS
+                                            anchors.verticalCenter: parent.verticalCenter
+                                            StyledText {
+                                                text: "Mem:"
+                                                font.pixelSize: Theme.fontSizeSmall - 2
+                                                font.weight: Font.Bold
                                                 color: Theme.surfaceVariantText
-                                                anchors.centerIn: parent
+                                                anchors.verticalCenter: parent.verticalCenter
+                                            }
+                                            StyledText {
+                                                property string vmRss: root.extractProcField(statViewExt.text(), "VmRSS")
+                                                text: {
+                                                    if (!vmRss) return "--%";
+                                                    let rssKb = parseInt(vmRss.replace(/[^0-9]/g, ""));
+                                                    if (isNaN(rssKb)) return "--%";
+                                                    let memTotalStr = root.extractProcField(memInfoView.text(), "MemTotal");
+                                                    let memTotalKb = parseInt(memTotalStr.replace(/[^0-9]/g, ""));
+                                                    if (isNaN(memTotalKb) || memTotalKb === 0) return "--%";
+                                                    let pct = (rssKb / memTotalKb * 100).toFixed(1);
+                                                    return pct + "%";
+                                                }
+                                                font.pixelSize: Theme.fontSizeSmall - 2
+                                                font.family: "Monospace"
+                                                color: Theme.surfaceText
+                                                anchors.verticalCenter: parent.verticalCenter
                                             }
                                         }
                                     }
@@ -1923,10 +2226,11 @@ PluginComponent {
                         }
 
                         DankIcon { name: "search_off"; size: 36; color: Theme.surfaceVariantText; anchors.horizontalCenter: parent.horizontalCenter }
-                        StyledText { text: "No matching processes"; font.pixelSize: 14; color: Theme.surfaceVariantText; anchors.horizontalCenter: parent.horizontalCenter }
+                        StyledText { text: "No matching processes"; font.pixelSize: Theme.fontSizeSmall; color: Theme.surfaceVariantText; anchors.horizontalCenter: parent.horizontalCenter }
                     }
                 }
             }
+
         }
     }
 
@@ -2114,7 +2418,7 @@ PluginComponent {
             StyledText {
                 text: statCardRoot.valueText
                 color: Theme.surfaceText
-                font.pixelSize: 28
+                font.pixelSize: Theme.fontSizeLarge * 1.5
                 font.weight: Font.Bold
             }
 
@@ -2216,4 +2520,144 @@ PluginComponent {
             }
         }
     }
+
+    // Context Menu Component (Matching Screenshot)
+    component DankContextMenu: Rectangle {
+        id: menuRoot
+        visible: false
+        width: 180
+        height: column.implicitHeight + Theme.spacingS * 2
+        color: Theme.surface
+        radius: Theme.cornerRadius
+        z: 9999
+        border.color: Theme.withAlpha(Theme.surfaceVariantText, 0.12)
+        border.width: 1
+
+        property var targetProcess: null
+        property bool showPid: true
+        FileView { id: menuCmdView; path: targetProcess ? ("/proc/" + targetProcess.pid + "/cmdline") : "" }
+
+        function show(px, py, proc, showPid = true) {
+            // Keep menu within parent bounds
+            let nx = px;
+            let ny = py;
+            if (nx + width > parent.width) nx = parent.width - width - 10;
+            if (ny + height > parent.height) ny = parent.height - height - 10;
+            
+            x = nx;
+            y = ny;
+            targetProcess = proc;
+            menuRoot.showPid = showPid;
+            visible = true;
+        }
+
+        function hide() {
+            visible = false;
+        }
+
+        Column {
+            id: column
+            anchors.fill: parent
+            anchors.margins: Theme.spacingS
+            spacing: 2
+
+            ContextMenuItem {
+                visible: menuRoot.showPid
+                height: menuRoot.showPid ? 32 : 0
+                icon: "tag"; text: "Copy PID"
+                onClicked: {
+                    Quickshell.execDetached(["dms", "cl", "copy", menuRoot.targetProcess.pid.toString()]);
+                    menuRoot.hide();
+                }
+            }
+
+            Item { visible: menuRoot.showPid; width: parent.width; height: 2 }
+            Rectangle { visible: menuRoot.showPid; width: parent.width - Theme.spacingM; height: 1; color: Theme.withAlpha(Theme.surfaceVariantText, 0.1); anchors.horizontalCenter: parent.horizontalCenter }
+            Item { visible: menuRoot.showPid; width: parent.width; height: 2 }
+
+            ContextMenuItem {
+                icon: "content_copy"; text: "Copy Name"
+                onClicked: {
+                    Quickshell.execDetached(["dms", "cl", "copy", menuRoot.targetProcess.name]);
+                    menuRoot.hide();
+                }
+            }
+            ContextMenuItem {
+                icon: "code"; text: "Copy Full Command"
+                onClicked: {
+                    let cmd = root.formatCmdline(menuCmdView.text()) || menuRoot.targetProcess.name;
+                    Quickshell.execDetached(["dms", "cl", "copy", cmd]);
+                    menuRoot.hide();
+                }
+            }
+
+            Item { width: parent.width; height: 2 }
+            Rectangle { width: parent.width - Theme.spacingM; height: 1; color: Theme.withAlpha(Theme.surfaceVariantText, 0.1); anchors.horizontalCenter: parent.horizontalCenter }
+            Item { width: parent.width; height: 2 }
+
+            ContextMenuItem {
+                icon: "close"; text: "Kill Process"
+                hoverColor: Theme.withAlpha(Theme.error, 0.1)
+                hoverIconColor: Theme.error
+                onClicked: {
+                    Quickshell.execDetached(["kill", menuRoot.targetProcess.pid.toString()]);
+                    menuRoot.hide();
+                }
+            }
+            ContextMenuItem {
+                icon: "cancel"; text: "Force Kill (SIGKILL)"
+                hoverColor: Theme.withAlpha(Theme.error, 0.1)
+                hoverIconColor: Theme.error
+                onClicked: {
+                    Quickshell.execDetached(["kill", "-9", menuRoot.targetProcess.pid.toString()]);
+                    menuRoot.hide();
+                }
+            }
+        }
+    }
+
+    component ContextMenuItem: Rectangle {
+        id: itemRoot
+        width: parent.width
+        height: 32
+        radius: 8
+        color: itemMouseArea.containsMouse ? hoverColor : "transparent"
+
+        property color hoverColor: Theme.withAlpha(Theme.primary, 0.08)
+        property color hoverIconColor: Theme.primary
+
+        property string icon: ""
+        property string text: ""
+        signal clicked()
+
+        Row {
+            anchors.fill: parent
+            anchors.leftMargin: Theme.spacingS
+            spacing: Theme.spacingS
+
+            DankIcon {
+                name: itemRoot.icon
+                size: 18
+                color: itemMouseArea.containsMouse ? itemRoot.hoverIconColor : Theme.surfaceVariantText
+                anchors.verticalCenter: parent.verticalCenter
+                Behavior on color { ColorAnimation { duration: 200 } }
+            }
+
+            StyledText {
+                text: itemRoot.text
+                font.pixelSize: Theme.fontSizeSmall
+                font.weight: Font.Medium
+                color: Theme.surfaceText
+                anchors.verticalCenter: parent.verticalCenter
+            }
+        }
+
+        MouseArea {
+            id: itemMouseArea
+            anchors.fill: parent
+            hoverEnabled: true
+            onClicked: itemRoot.clicked()
+        }
+    }
 }
+

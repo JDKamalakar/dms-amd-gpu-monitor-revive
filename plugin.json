@@ -3,8 +3,8 @@
     "name": "AMD GPU Monitor Revive",
     "description": "Monitor AMD GPU usage, VRAM, temperature, power consumption and process usage with updated UI.",
     "category": "monitoring",
-    "version": "1.0.0",
-    "author": "Navid A.",
+    "version": "1.2.0",
+    "author": "JD.",
     "type": "widget",
     "capabilities": [
         "dankbar-widget",
@@ -12,7 +12,7 @@
     ],
     "component": "./AmdGpuMonitorWidget.qml",
     "settings": "./AmdGpuMonitorSettings.qml",
-    "icon": "memory",
+    "icon": "dashboard",
     "requires": [
         "amdgpu_top"
     ],
