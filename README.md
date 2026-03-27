@@ -69,7 +69,7 @@ For developers or users who want the latest edge builds:
 
 Found a bug or have a feature request? Let’s make this better together.
 
-* **Report Issues:** [GitHub Issues](https://github.com/JDKamalakar/dms-amd-gpu-monitor-revive/compare)
+* **Report Issues:** [GitHub Issues](https://github.com/JDKamalakar/DMS-AMD_GPU_Monitor_Revive/issues/new/choose)
 * **Contributions:** Pull requests are welcome! Please ensure your code follows the shell's design guidelines.
 
 ---
