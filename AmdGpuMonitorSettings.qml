@@ -42,4 +42,18 @@ PluginSettings {
         ]
         defaultValue: "dmsExtended"
     }
+
+    StringSetting {
+        settingKey: "customHeroIcon"
+        label: "Custom Hero Icon Path"
+        description: "Absolute path or URL to replace the generic developer_board logo before the GPU name."
+        defaultValue: ""
+    }
+
+    StringSetting {
+        settingKey: "customHeroIconSize"
+        label: "Custom Icon Size (px)"
+        description: "The width and height of the custom icon (max 70). Default is 46."
+        defaultValue: "46"
+    }
 }
