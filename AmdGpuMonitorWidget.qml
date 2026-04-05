@@ -206,7 +206,7 @@ PluginComponent {
             }
 
             StyledText {
-                text: `${root.gpuUsage.toFixed(0)}%`
+                text: `${root.gpuUsage.toFixed(0)}`
                 font.pixelSize: Theme.barTextSize(root.barThickness, root.barConfig?.fontScale, root.barConfig?.maximizeWidgetText)
                 color: Theme.widgetTextColor
                 anchors.horizontalCenter: parent.horizontalCenter
