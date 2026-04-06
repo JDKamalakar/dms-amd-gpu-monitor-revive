@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 import Quickshell
 import Quickshell.Io
+import Qt5Compat.GraphicalEffects
 
 import qs.Common
 import qs.Widgets
@@ -30,6 +31,17 @@ PluginComponent {
 
     property bool minimumWidth: pluginData.minimumWidth !== undefined ? pluginData.minimumWidth : false
     property string popoutStyle: pluginData.popoutStyle || "dmsExtended"
+    property string customHeroIcon: pluginData.customHeroIcon || ""
+    property string customHeroIconSize: pluginData.customHeroIconSize || "46"
+
+    Connections {
+        target: root
+        function onPluginDataChanged() {
+            root.popoutStyle = pluginData.popoutStyle || "dmsExtended"
+            root.customHeroIcon = pluginData.customHeroIcon || ""
+            root.customHeroIconSize = pluginData.customHeroIconSize || "46"
+        }
+    }
 
     // 1. ADD THIS LINE: Tells the DMS window manager exactly how wide to make the surface
     popoutWidth: root.popoutStyle === "dmsExtended" ? 640 : 360
@@ -194,7 +206,7 @@ PluginComponent {
             }
 
             StyledText {
-                text: `${root.gpuUsage.toFixed(0)}%`
+                text: `${root.gpuUsage.toFixed(0)}`
                 font.pixelSize: Theme.barTextSize(root.barThickness, root.barConfig?.fontScale, root.barConfig?.maximizeWidgetText)
                 color: Theme.widgetTextColor
                 anchors.horizontalCenter: parent.horizontalCenter
@@ -1443,7 +1455,39 @@ PluginComponent {
                     Rectangle {
                         width: 70; height: 70; radius: 16 
                         color: Theme.withAlpha(Theme.primary, 0.15) 
-                        DankIcon { name: "developer_board"; size: 34; anchors.centerIn: parent; color: Theme.primary }
+
+                        Image {
+                            id: customHeroImage
+                            visible: root.customHeroIcon !== ""
+                            anchors.fill: parent
+                            anchors.margins: {
+                                const size = parseInt(root.customHeroIconSize) || 46;
+                                return Math.max(0, (70 - size) / 2);
+                            }
+                            sourceSize: Qt.size(140, 140) 
+                            source: root.customHeroIcon ? (root.customHeroIcon.startsWith("http") || root.customHeroIcon.startsWith("file://") ? root.customHeroIcon : "file://" + root.customHeroIcon) : ""
+                            fillMode: Image.PreserveAspectFit
+                            mipmap: true
+                            asynchronous: true
+                            
+                            layer.enabled: true
+                            layer.effect: DropShadow {
+                                transparentBorder: true
+                                horizontalOffset: 1
+                                verticalOffset: 2
+                                radius: 4.0
+                                samples: 12
+                                color: Theme.withAlpha(Theme.shadowColor || "#000000", 0.45)
+                            }
+                        }
+                        
+                        DankIcon { 
+                            visible: root.customHeroIcon === ""
+                            name: "developer_board"
+                            size: 34
+                            anchors.centerIn: parent
+                            color: Theme.primary 
+                        }
                     }
 
                     Column {
