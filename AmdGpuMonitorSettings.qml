@@ -11,7 +11,7 @@ PluginSettings {
 
     Rectangle {
         width: parent.width
-        height: layoutGroup.height + Theme.spacingM * 2
+        height: layoutGroup.childrenRect.height + Theme.spacingM * 2
         color: Theme.surfaceContainer
         radius: Theme.cornerRadius
         border.color: Theme.outline
@@ -32,10 +32,8 @@ PluginSettings {
 
         Column {
             id: layoutGroup
-            anchors.left: parent.left
-            anchors.right: parent.right
-            anchors.top: parent.top
-            anchors.margins: Theme.spacingM
+            width: parent.width - Theme.spacingM * 2
+            anchors.centerIn: parent
             spacing: Theme.spacingM
 
             Row {
@@ -74,7 +72,7 @@ PluginSettings {
 
     Rectangle {
         width: parent.width
-        height: heroIconGroup.height + Theme.spacingM * 2
+        height: heroIconGroup.childrenRect.height + Theme.spacingM * 2
         color: Theme.surfaceContainer
         radius: Theme.cornerRadius
         border.color: Theme.outline
@@ -95,10 +93,8 @@ PluginSettings {
 
         Column {
             id: heroIconGroup
-            anchors.left: parent.left
-            anchors.right: parent.right
-            anchors.top: parent.top
-            anchors.margins: Theme.spacingM
+            width: parent.width - Theme.spacingM * 2
+            anchors.centerIn: parent
             spacing: Theme.spacingL
 
             // Custom Hero Icon Path
