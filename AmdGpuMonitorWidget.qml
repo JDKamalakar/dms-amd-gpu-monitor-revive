@@ -2303,7 +2303,7 @@ PluginComponent {
 
         readonly property real thickness: Math.max(4, Math.min(width, height) / 15)
         readonly property real glowExtra: thickness * 1.4
-        readonly property real arcPadding: thickness / 1.3
+        readonly property real arcPadding: ((thickness + glowExtra) / 2) + 1
 
         readonly property real innerDiameter: width - (arcPadding + thickness + glowExtra) * 2
         readonly property real maxTextWidth: innerDiameter * 0.9
