@@ -33,6 +33,7 @@ PluginComponent {
     property string popoutStyle: pluginData.popoutStyle || "dmsExtended"
     property string customHeroIcon: pluginData.customHeroIcon || ""
     property string customHeroIconSize: pluginData.customHeroIconSize || "46"
+    property string persistEmptyStates: pluginData.persistEmptyStates || "enabled"
 
     Connections {
         target: root
@@ -40,6 +41,7 @@ PluginComponent {
             root.popoutStyle = pluginData.popoutStyle || "dmsExtended"
             root.customHeroIcon = pluginData.customHeroIcon || ""
             root.customHeroIconSize = pluginData.customHeroIconSize || "46"
+            root.persistEmptyStates = pluginData.persistEmptyStates || "enabled"
         }
     }
 
@@ -335,7 +337,7 @@ PluginComponent {
             }
 
             Column {
-                visible: root.gfxUsage > 0
+                visible: root.persistEmptyStates === "enabled" || root.gfxUsage > 0
                 width: parent.width
                 spacing: Theme.spacingS
 
@@ -375,7 +377,7 @@ PluginComponent {
                 spacing: Theme.spacingXL
 
                 Column {
-                    visible: root.temperature > 0
+                    visible: root.persistEmptyStates === "enabled" || root.temperature > 0
                     spacing: Theme.spacingXS
 
                     StyledText {
@@ -393,7 +395,7 @@ PluginComponent {
                 }
 
                 Column {
-                    visible: root.powerUsage > 0
+                    visible: root.persistEmptyStates === "enabled" || root.powerUsage > 0
                     spacing: Theme.spacingXS
 
                     StyledText {
@@ -413,7 +415,7 @@ PluginComponent {
 
             // Process List
             Column {
-                visible: root.processes.length > 0
+                visible: root.persistEmptyStates === "enabled" || root.processes.length > 0
                 width: parent.width
                 spacing: Theme.spacingS
 
@@ -556,6 +558,16 @@ PluginComponent {
                 radius: 16
                 color: Theme.withAlpha(Theme.surfaceContainerHigh, Theme.popupTransparency)
                 
+                layer.enabled: true
+                layer.effect: DropShadow {
+                    transparentBorder: true
+                    horizontalOffset: 0
+                    verticalOffset: 3
+                    radius: 12.0
+                    samples: 24
+                    color: Theme.withAlpha(Theme.shadowColor || "#000000", 0.35)
+                }
+
                 Row {
                     anchors.fill: parent
                     anchors.leftMargin: Theme.spacingM
@@ -611,11 +623,21 @@ PluginComponent {
 
                 // Temperature chip
                 Rectangle {
-                    visible: root.temperature > 0
+                    visible: root.persistEmptyStates === "enabled" || root.temperature > 0
                     width: (parent.width - Theme.spacingS) / 2
                     height: 48
                     radius: 12
                     color: root.temperature > 80 ? Theme.withAlpha(Theme.errorHover, Theme.popupTransparency) : Theme.withAlpha(Theme.surfaceContainerHigh, Theme.popupTransparency)
+
+                    layer.enabled: true
+                    layer.effect: DropShadow {
+                        transparentBorder: true
+                        horizontalOffset: 0
+                        verticalOffset: 2
+                        radius: 8.0
+                        samples: 16
+                        color: Theme.withAlpha(Theme.shadowColor || "#000000", 0.3)
+                    }
 
                     Row {
                         anchors.centerIn: parent
@@ -640,11 +662,21 @@ PluginComponent {
 
                 // Power chip
                 Rectangle {
-                    visible: root.powerUsage > 0
+                    visible: root.persistEmptyStates === "enabled" || root.powerUsage > 0
                     width: (parent.width - Theme.spacingS) / 2
                     height: 48
                     radius: 12
                     color: Theme.withAlpha(Theme.surfaceContainerHigh, Theme.popupTransparency)
+
+                    layer.enabled: true
+                    layer.effect: DropShadow {
+                        transparentBorder: true
+                        horizontalOffset: 0
+                        verticalOffset: 2
+                        radius: 8.0
+                        samples: 16
+                        color: Theme.withAlpha(Theme.shadowColor || "#000000", 0.3)
+                    }
 
                     Row {
                         anchors.centerIn: parent
@@ -670,11 +702,21 @@ PluginComponent {
 
             // Engine activity section
             Rectangle {
-                visible: root.gfxUsage > 0 || root.memUsage > 0 || root.mediaUsage > 0
+                visible: root.persistEmptyStates === "enabled" || (root.gfxUsage > 0 || root.memUsage > 0 || root.mediaUsage > 0)
                 width: parent.width
                 height: engineContent.height + Theme.spacingM * 2
                 radius: Theme.cornerRadius
                 color: Theme.withAlpha(Theme.surfaceContainerHigh, Theme.popupTransparency)
+
+                layer.enabled: true
+                layer.effect: DropShadow {
+                    transparentBorder: true
+                    horizontalOffset: 0
+                    verticalOffset: 3
+                    radius: 12.0
+                    samples: 24
+                    color: Theme.withAlpha(Theme.shadowColor || "#000000", 0.35)
+                }
 
                 Column {
                     id: engineContent
@@ -724,13 +766,25 @@ PluginComponent {
                         barColor: Theme.info
                     }
                 }
-            }            // Process list section (Synced with DMS)
+            }            
+            
+            // Process list section (Synced with DMS)
             Rectangle {
-                visible: root.gfxUsage > 0 || root.memUsage > 0 || root.mediaUsage > 0
+                visible: root.persistEmptyStates === "enabled" || (root.gfxUsage > 0 || root.memUsage > 0 || root.mediaUsage > 0)
                 width: parent.width
                 height: altProcessItems.height + Theme.spacingM * 2
                 radius: Theme.cornerRadius
                 color: Theme.withAlpha(Theme.surfaceContainerHigh, Theme.popupTransparency)
+
+                layer.enabled: true
+                layer.effect: DropShadow {
+                    transparentBorder: true
+                    horizontalOffset: 0
+                    verticalOffset: 3
+                    radius: 12.0
+                    samples: 24
+                    color: Theme.withAlpha(Theme.shadowColor || "#000000", 0.35)
+                }
 
                 Column {
                     id: altProcessItems
@@ -848,12 +902,13 @@ PluginComponent {
                                             anchors.verticalCenter: parent.verticalCenter
 
                                             StyledText {
+                                                id: altProcNameText
                                                 text: modelData.name
                                                 font.pixelSize: Theme.fontSizeSmall
                                                 font.weight: Font.Medium
                                                 color: Theme.surfaceText
                                                 elide: Text.ElideRight
-                                                width: Math.min(implicitWidth, 120)
+                                                width: parent.parent.width - (Theme.iconSize - 4) - Theme.spacingS
                                             }
                                         }
                                     }
@@ -973,6 +1028,16 @@ PluginComponent {
                 radius: 16
                 color: Theme.withAlpha(Theme.surfaceContainerHigh, Theme.popupTransparency)
                 
+                layer.enabled: true
+                layer.effect: DropShadow {
+                    transparentBorder: true
+                    horizontalOffset: 0
+                    verticalOffset: 3
+                    radius: 12.0
+                    samples: 24
+                    color: Theme.withAlpha(Theme.shadowColor || "#000000", 0.35)
+                }
+
                 Row {
                     anchors.fill: parent
                     anchors.leftMargin: Theme.spacingM
@@ -1027,7 +1092,7 @@ PluginComponent {
                     }
 
                     CircleGauge {
-                        visible: root.temperature > 0
+                        visible: root.persistEmptyStates === "enabled" || root.temperature > 0
                         width: parent.parent.gaugeSize
                         height: parent.parent.gaugeSize
                         value: Math.min(1, root.temperature / 100)
@@ -1042,11 +1107,21 @@ PluginComponent {
 
             // Engine activity section
             Rectangle {
-                visible: root.gfxUsage > 0 || root.memUsage > 0 || root.mediaUsage > 0
+                visible: root.persistEmptyStates === "enabled" || (root.gfxUsage > 0 || root.memUsage > 0 || root.mediaUsage > 0)
                 width: parent.width
                 height: engineContent.height + Theme.spacingM * 2
                 radius: Theme.cornerRadius
                 color: Theme.withAlpha(Theme.surfaceContainerHigh, Theme.popupTransparency)
+
+                layer.enabled: true
+                layer.effect: DropShadow {
+                    transparentBorder: true
+                    horizontalOffset: 0
+                    verticalOffset: 3
+                    radius: 12.0
+                    samples: 24
+                    color: Theme.withAlpha(Theme.shadowColor || "#000000", 0.35)
+                }
 
                 Column {
                     id: engineContent
@@ -1100,11 +1175,21 @@ PluginComponent {
 
             // Process list section
             Rectangle {
-                visible: root.gfxUsage > 0 || root.memUsage > 0 || root.mediaUsage > 0
+                visible: root.persistEmptyStates === "enabled" || (root.gfxUsage > 0 || root.memUsage > 0 || root.mediaUsage > 0)
                 width: parent.width
                 height: processContent.height + Theme.spacingM * 2
                 radius: Theme.cornerRadius
                 color: Theme.withAlpha(Theme.surfaceContainerHigh, Theme.popupTransparency)
+
+                layer.enabled: true
+                layer.effect: DropShadow {
+                    transparentBorder: true
+                    horizontalOffset: 0
+                    verticalOffset: 3
+                    radius: 12.0
+                    samples: 24
+                    color: Theme.withAlpha(Theme.shadowColor || "#000000", 0.35)
+                }
 
                 Column {
                     id: processContent
@@ -1223,12 +1308,13 @@ PluginComponent {
                                             anchors.verticalCenter: parent.verticalCenter
 
                                             StyledText {
+                                                id: dmsProcNameText
                                                 text: modelData.name
                                                 font.pixelSize: Theme.fontSizeSmall
                                                 font.weight: Font.Medium
                                                 color: Theme.surfaceText
                                                 elide: Text.ElideRight
-                                                width: Math.min(implicitWidth, 120)
+                                                width: parent.parent.width - (Theme.iconSize - 4) - Theme.spacingS
                                             }
                                         }
                                     }
@@ -1525,7 +1611,7 @@ PluginComponent {
                     }
 
                     CircleGauge { 
-                        visible: root.temperature > 0
+                        visible: root.persistEmptyStates === "enabled" || root.temperature > 0
                         width: 80; height: 80 
                         value: Math.min(1, root.temperature / 100)
                         label: root.temperature + "°C"
@@ -1538,11 +1624,21 @@ PluginComponent {
 
             // 3. ENGINE ACTIVITY SECTION
             Rectangle {
-                visible: root.gfxUsage > 0 || root.memUsage > 0 || root.mediaUsage > 0
+                visible: root.persistEmptyStates === "enabled" || (root.gfxUsage > 0 || root.memUsage > 0 || root.mediaUsage > 0)
                 width: parent.width
                 height: engineContent.height + Theme.spacingM * 2
                 radius: Theme.cornerRadius
                 color: Theme.withAlpha(Theme.surfaceContainerHigh, Theme.popupTransparency)
+
+                layer.enabled: true
+                layer.effect: DropShadow {
+                    transparentBorder: true
+                    horizontalOffset: 0
+                    verticalOffset: 3
+                    radius: 12.0
+                    samples: 24
+                    color: Theme.withAlpha(Theme.shadowColor || "#000000", 0.35)
+                }
 
                 Column {
                     id: engineContent
@@ -1572,6 +1668,16 @@ PluginComponent {
                 radius: Theme.cornerRadius
                 color: Theme.withAlpha(Theme.surfaceContainerHigh, Theme.popupTransparency)
                 
+                layer.enabled: true
+                layer.effect: DropShadow {
+                    transparentBorder: true
+                    horizontalOffset: 0
+                    verticalOffset: 3
+                    radius: 12.0
+                    samples: 24
+                    color: Theme.withAlpha(Theme.shadowColor || "#000000", 0.35)
+                }
+
                 FileView { id: cmdViewExt; path: "/proc/" + processSection.expandedPid + "/cmdline" }
                 FileView { id: statViewExt; path: "/proc/" + processSection.expandedPid + "/status" }
                 FileView { id: memInfoView; path: "/proc/meminfo" }
@@ -1590,31 +1696,78 @@ PluginComponent {
 
                 signal triggerRecalc()
 
-                onSortColChanged: triggerRecalc()
-                onSortAscChanged: triggerRecalc()
-                onFilterModeChanged: triggerRecalc()
-                onSearchTextChanged: triggerRecalc()
+                onSortColChanged: syncData()
+                onSortAscChanged: syncData()
+                onFilterModeChanged: syncData()
+                onSearchTextChanged: syncData()
 
                 ListModel { id: stableModel }
 
+                function sortProcesses(pList) {
+                    if (!pList) return [];
+                    return pList.sort((a, b) => {
+                        let valA, valB;
+                        if (processSection.sortCol === "name") {
+                            valA = a.name.toLowerCase();
+                            valB = b.name.toLowerCase();
+                        } else if (processSection.sortCol === "gpu") {
+                            valA = a.gfx;
+                            valB = b.gfx;
+                        } else if (processSection.sortCol === "vram") {
+                            valA = a.vram * (a.vramUnit === "GiB" ? 1024 : 1);
+                            valB = b.vram * (b.vramUnit === "GiB" ? 1024 : 1);
+                        } else if (processSection.sortCol === "pid") {
+                            valA = a.pid;
+                            valB = b.pid;
+                        }
+
+                        let res = 0;
+                        if (valA < valB) res = -1;
+                        else if (valA > valB) res = 1;
+                        
+                        return processSection.sortAsc ? res : -res;
+                    });
+                }
+
                 function syncData() {
-                    let pList = root.processes || [];
+                    let rawList = root.processes || [];
+                    
+                    // 1. FILTER & SEARCH
+                    let systemProcs = ["xorg", "xwayland", "wayland", "kwin", "kwin_wayland", "kwin_x11", "niri", "hyprland", "plasmashell", "sddm", "gdm", "systemd"];
+                    let filteredList = rawList.filter(p => {
+                        let isSys = systemProcs.some(sys => p.name.toLowerCase().includes(sys));
+                        let mFilter = processSection.filterMode === 0 || (processSection.filterMode === 1 && !isSys) || (processSection.filterMode === 2 && isSys);
+                        let mSearch = processSection.searchText === "" || p.name.toLowerCase().includes(processSection.searchText.toLowerCase()) || p.pid.toString().includes(processSection.searchText);
+                        return mFilter && mSearch;
+                    });
+
+                    // 2. SORT
+                    let sortedList = sortProcesses(filteredList);
+                    processSection.matchCount = sortedList.length;
+
+                    // 3. EFFICIENT SYNC (Maintain identity for animations)
+                    // Mark existing
                     for(let i=0; i<stableModel.count; i++) stableModel.setProperty(i, "visited", false);
                     
-                    for(let i=0; i<pList.length; i++) {
-                        let p = pList[i];
-                        let found = false;
+                    for(let i=0; i<sortedList.length; i++) {
+                        let p = sortedList[i];
+                        let foundIdx = -1;
                         for(let j=0; j<stableModel.count; j++) {
                             if(stableModel.get(j).pid === p.pid) {
-                                stableModel.setProperty(j, "gfx", p.gfx);
-                                stableModel.setProperty(j, "vram", p.vram);
-                                stableModel.setProperty(j, "visited", true);
-                                found = true;
+                                foundIdx = j;
                                 break;
                             }
                         }
-                        if(!found) {
-                            stableModel.append({
+
+                        if(foundIdx !== -1) {
+                            stableModel.setProperty(foundIdx, "gfx", p.gfx);
+                            stableModel.setProperty(foundIdx, "vram", p.vram);
+                            stableModel.setProperty(foundIdx, "visited", true);
+                            if (foundIdx !== i) {
+                                stableModel.move(foundIdx, i, 1);
+                            }
+                        } else {
+                            stableModel.insert(i, {
                                 name: p.name,
                                 pid: p.pid,
                                 vram: p.vram,
@@ -1625,21 +1778,10 @@ PluginComponent {
                         }
                     }
                     
+                    // Remove unvisited
                     for(let i=stableModel.count-1; i>=0; i--) {
                         if(stableModel.get(i).visited === false) stableModel.remove(i);
                     }
-                    
-                    let count = 0;
-                    let systemProcs = ["xorg", "xwayland", "wayland", "kwin", "kwin_wayland", "kwin_x11", "niri", "hyprland", "plasmashell", "sddm", "gdm", "systemd"];
-                    for(let i=0; i<stableModel.count; i++) {
-                        let p = stableModel.get(i);
-                        let isSys = systemProcs.some(sys => p.name.toLowerCase().includes(sys));
-                        let mFilter = processSection.filterMode === 0 || (processSection.filterMode === 1 && !isSys) || (processSection.filterMode === 2 && isSys);
-                        let mSearch = processSection.searchText === "" || p.name.toLowerCase().includes(processSection.searchText.toLowerCase()) || p.pid.toString().includes(processSection.searchText);
-                        if (mFilter && mSearch) count++;
-                    }
-                    processSection.matchCount = count;
-                    processSection.triggerRecalc();
                 }
 
                 Connections {
@@ -1924,9 +2066,9 @@ PluginComponent {
                             
 
                             // Match official DMS height logic
-                            height: isMatch ? (isExpanded ? (48 + expandedRect.height + Theme.spacingXS) : 48) : 0
-                            opacity: isMatch ? 1 : 0
-                            visible: height > 0
+                            height: isExpanded ? (48 + expandedRect.height + Theme.spacingXS) : 48
+                            opacity: 1
+                            visible: true
 
                             Behavior on height { NumberAnimation { duration: Theme.shortDuration; easing.type: Theme.standardEasing } }
                             Behavior on opacity { NumberAnimation { duration: Theme.shortDuration; easing.type: Theme.standardEasing } }
@@ -1943,67 +2085,7 @@ PluginComponent {
 
                             DankRipple { id: extRipple; cornerRadius: parent.radius }
 
-                            property int visualIndex: -1
-                            property bool isMatch: false
 
-                            function computeRank() {
-                                let myP = stableModel.get(index);
-                                if (!myP) return;
-
-                                let systemProcs = ["xorg", "xwayland", "wayland", "kwin", "kwin_wayland", "kwin_x11", "niri", "hyprland", "plasmashell", "sddm", "gdm", "systemd"];
-                                let myIsSys = systemProcs.some(sys => myP.name.toLowerCase().includes(sys));
-                                let myMatchF = processSection.filterMode === 0 || (processSection.filterMode === 1 && !myIsSys) || (processSection.filterMode === 2 && myIsSys);
-                                let myMatchS = processSection.searchText === "" || myP.name.toLowerCase().includes(processSection.searchText.toLowerCase()) || myP.pid.toString().includes(processSection.searchText);
-                                
-                                isMatch = myMatchF && myMatchS;
-                                
-                                if (!isMatch) {
-                                    visualIndex = -1;
-                                    return;
-                                }
-
-                                let rank = 0;
-                                let myVal;
-                                if (processSection.sortCol === "name") myVal = myP.name.toLowerCase();
-                                else if (processSection.sortCol === "gpu") myVal = myP.gfx;
-                                else if (processSection.sortCol === "vram") myVal = myP.vram * (myP.vramUnit === "GiB" ? 1024 : 1);
-                                else if (processSection.sortCol === "pid") myVal = myP.pid;
-
-                                for (let i = 0; i < stableModel.count; i++) {
-                                    if (i === index) continue;
-                                    let otherP = stableModel.get(i);
-                                    
-                                    let otherIsSys = systemProcs.some(sys => otherP.name.toLowerCase().includes(sys));
-                                    let otherMatchF = processSection.filterMode === 0 || (processSection.filterMode === 1 && !otherIsSys) || (processSection.filterMode === 2 && otherIsSys);
-                                    let otherMatchS = processSection.searchText === "" || otherP.name.toLowerCase().includes(processSection.searchText.toLowerCase()) || otherP.pid.toString().includes(processSection.searchText);
-                                    
-                                    if (otherMatchF && otherMatchS) {
-                                        let otherVal;
-                                        if (processSection.sortCol === "name") otherVal = otherP.name.toLowerCase();
-                                        else if (processSection.sortCol === "gpu") otherVal = otherP.gfx;
-                                        else if (processSection.sortCol === "vram") otherVal = otherP.vram * (otherP.vramUnit === "GiB" ? 1024 : 1);
-                                        else if (processSection.sortCol === "pid") otherVal = otherP.pid;
-
-                                        let isSmaller;
-                                        if (processSection.sortCol === "name") isSmaller = myVal < otherVal;
-                                        else isSmaller = myVal > otherVal;
-
-                                        if (processSection.sortAsc) isSmaller = !isSmaller;
-
-                                        if (isSmaller) rank++;
-                                        else if (myVal === otherVal && index > i) rank++; 
-                                    }
-                                }
-                                visualIndex = rank;
-                            }
-
-                            Connections {
-                                target: processSection
-                                function onTriggerRecalc() { computeRank(); }
-                            }
-                            Component.onCompleted: {
-                                computeRank();
-                            }
 
                             MouseArea {
                                 id: procMouseArea
@@ -2438,6 +2520,16 @@ PluginComponent {
         height: 100
         radius: 16
         color: Theme.surfaceContainerHigh
+
+        layer.enabled: true
+        layer.effect: DropShadow {
+            transparentBorder: true
+            horizontalOffset: 0
+            verticalOffset: 3
+            radius: 12.0
+            samples: 24
+            color: Theme.withAlpha(Theme.shadowColor || "#000000", 0.35)
+        }
 
         property string iconName: ""
         property color iconColor: Theme.primary
