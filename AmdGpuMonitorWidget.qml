@@ -33,7 +33,6 @@ PluginComponent {
     property string popoutStyle: pluginData.popoutStyle || "dmsExtended"
     property string customHeroIcon: pluginData.customHeroIcon || ""
     property string customHeroIconSize: pluginData.customHeroIconSize || "46"
-    property string persistEmptyStates: pluginData.persistEmptyStates || "enabled"
 
     Connections {
         target: root
@@ -41,7 +40,6 @@ PluginComponent {
             root.popoutStyle = pluginData.popoutStyle || "dmsExtended"
             root.customHeroIcon = pluginData.customHeroIcon || ""
             root.customHeroIconSize = pluginData.customHeroIconSize || "46"
-            root.persistEmptyStates = pluginData.persistEmptyStates || "enabled"
         }
     }
 
@@ -337,7 +335,7 @@ PluginComponent {
             }
 
             Column {
-                visible: root.persistEmptyStates === "enabled" || root.gfxUsage > 0
+                visible: root.gfxUsage > 0
                 width: parent.width
                 spacing: Theme.spacingS
 
@@ -377,7 +375,7 @@ PluginComponent {
                 spacing: Theme.spacingXL
 
                 Column {
-                    visible: root.persistEmptyStates === "enabled" || root.temperature > 0
+                    visible: root.temperature > 0
                     spacing: Theme.spacingXS
 
                     StyledText {
@@ -395,7 +393,7 @@ PluginComponent {
                 }
 
                 Column {
-                    visible: root.persistEmptyStates === "enabled" || root.powerUsage > 0
+                    visible: root.powerUsage > 0
                     spacing: Theme.spacingXS
 
                     StyledText {
@@ -415,7 +413,7 @@ PluginComponent {
 
             // Process List
             Column {
-                visible: root.persistEmptyStates === "enabled" || root.processes.length > 0
+                visible: root.processes.length > 0
                 width: parent.width
                 spacing: Theme.spacingS
 
@@ -623,7 +621,7 @@ PluginComponent {
 
                 // Temperature chip
                 Rectangle {
-                    visible: root.persistEmptyStates === "enabled" || root.temperature > 0
+                    visible: root.temperature > 0
                     width: (parent.width - Theme.spacingS) / 2
                     height: 48
                     radius: 12
@@ -662,7 +660,7 @@ PluginComponent {
 
                 // Power chip
                 Rectangle {
-                    visible: root.persistEmptyStates === "enabled" || root.powerUsage > 0
+                    visible: root.powerUsage > 0
                     width: (parent.width - Theme.spacingS) / 2
                     height: 48
                     radius: 12
@@ -702,7 +700,7 @@ PluginComponent {
 
             // Engine activity section
             Rectangle {
-                visible: root.persistEmptyStates === "enabled" || (root.gfxUsage > 0 || root.memUsage > 0 || root.mediaUsage > 0)
+                visible: root.gfxUsage > 0 || root.memUsage > 0 || root.mediaUsage > 0
                 width: parent.width
                 height: engineContent.height + Theme.spacingM * 2
                 radius: Theme.cornerRadius
@@ -770,7 +768,7 @@ PluginComponent {
             
             // Process list section (Synced with DMS)
             Rectangle {
-                visible: root.persistEmptyStates === "enabled" || (root.gfxUsage > 0 || root.memUsage > 0 || root.mediaUsage > 0)
+                visible: root.gfxUsage > 0 || root.memUsage > 0 || root.mediaUsage > 0
                 width: parent.width
                 height: altProcessItems.height + Theme.spacingM * 2
                 radius: Theme.cornerRadius
@@ -1092,7 +1090,7 @@ PluginComponent {
                     }
 
                     CircleGauge {
-                        visible: root.persistEmptyStates === "enabled" || root.temperature > 0
+                        visible: root.temperature > 0
                         width: parent.parent.gaugeSize
                         height: parent.parent.gaugeSize
                         value: Math.min(1, root.temperature / 100)
@@ -1107,7 +1105,7 @@ PluginComponent {
 
             // Engine activity section
             Rectangle {
-                visible: root.persistEmptyStates === "enabled" || (root.gfxUsage > 0 || root.memUsage > 0 || root.mediaUsage > 0)
+                visible: root.gfxUsage > 0 || root.memUsage > 0 || root.mediaUsage > 0
                 width: parent.width
                 height: engineContent.height + Theme.spacingM * 2
                 radius: Theme.cornerRadius
@@ -1175,7 +1173,7 @@ PluginComponent {
 
             // Process list section
             Rectangle {
-                visible: root.persistEmptyStates === "enabled" || (root.gfxUsage > 0 || root.memUsage > 0 || root.mediaUsage > 0)
+                visible: root.gfxUsage > 0 || root.memUsage > 0 || root.mediaUsage > 0
                 width: parent.width
                 height: processContent.height + Theme.spacingM * 2
                 radius: Theme.cornerRadius
@@ -1611,7 +1609,7 @@ PluginComponent {
                     }
 
                     CircleGauge { 
-                        visible: root.persistEmptyStates === "enabled" || root.temperature > 0
+                        visible: root.temperature > 0
                         width: 80; height: 80 
                         value: Math.min(1, root.temperature / 100)
                         label: root.temperature + "°C"
@@ -1624,7 +1622,7 @@ PluginComponent {
 
             // 3. ENGINE ACTIVITY SECTION
             Rectangle {
-                visible: root.persistEmptyStates === "enabled" || (root.gfxUsage > 0 || root.memUsage > 0 || root.mediaUsage > 0)
+                visible: root.gfxUsage > 0 || root.memUsage > 0 || root.mediaUsage > 0
                 width: parent.width
                 height: engineContent.height + Theme.spacingM * 2
                 radius: Theme.cornerRadius
@@ -1858,7 +1856,9 @@ PluginComponent {
                                         if (processSection.sortCol === "name") processSection.sortAsc = !processSection.sortAsc;
                                         else { processSection.sortCol = "name"; processSection.sortAsc = true; }
                                     }
+                                    onPressed: (m) => nameRipple.trigger(m.x, m.y)
                                 }
+                                DankRipple { id: nameRipple; anchors.fill: parent; cornerRadius: Theme.cornerRadius }
                                 Row {
                                     anchors.left: parent.left
                                     anchors.leftMargin: Theme.spacingS
@@ -1915,7 +1915,9 @@ PluginComponent {
                                             if (processSection.sortCol === "gpu") processSection.sortAsc = !processSection.sortAsc;
                                             else { processSection.sortCol = "gpu"; processSection.sortAsc = false; }
                                         }
+                                        onPressed: (m) => gpuRipple.trigger(m.x, m.y)
                                     }
+                                    DankRipple { id: gpuRipple; anchors.fill: parent; cornerRadius: Theme.cornerRadius }
                                     Row {
                                         anchors.centerIn: parent
                                         spacing: 6
@@ -1964,7 +1966,9 @@ PluginComponent {
                                             if (processSection.sortCol === "vram") processSection.sortAsc = !processSection.sortAsc;
                                             else { processSection.sortCol = "vram"; processSection.sortAsc = false; }
                                         }
+                                        onPressed: (m) => vramRipple.trigger(m.x, m.y)
                                     }
+                                    DankRipple { id: vramRipple; anchors.fill: parent; cornerRadius: Theme.cornerRadius }
                                     Row {
                                         anchors.centerIn: parent
                                         spacing: 6
@@ -2013,7 +2017,9 @@ PluginComponent {
                                             if (processSection.sortCol === "pid") processSection.sortAsc = !processSection.sortAsc;
                                             else { processSection.sortCol = "pid"; processSection.sortAsc = true; }
                                         }
+                                        onPressed: (m) => pidRipple.trigger(m.x, m.y)
                                     }
+                                    DankRipple { id: pidRipple; anchors.fill: parent; cornerRadius: Theme.cornerRadius }
                                     Row {
                                         anchors.centerIn: parent
                                         spacing: 6
@@ -2057,9 +2063,29 @@ PluginComponent {
                         spacing: 2
                         boundsBehavior: Flickable.StopAtBounds
 
+                        add: Transition { 
+                            NumberAnimation { property: "y"; from: 48; duration: 400; easing.type: Easing.OutBack } 
+                            NumberAnimation { properties: "opacity,scale"; from: 0; to: 1; duration: 300; easing.type: Easing.OutCubic } 
+                        }
+                        remove: Transition { 
+                            NumberAnimation { property: "y"; to: 48; duration: 300; easing.type: Easing.InBack } 
+                            NumberAnimation { properties: "opacity,scale"; to: 0; duration: 250 } 
+                        }
+                        displaced: Transition { 
+                            NumberAnimation { properties: "y"; duration: 450; easing.type: Easing.OutCubic } 
+                        }
+                        move: Transition { 
+                            NumberAnimation { properties: "y"; duration: 450; easing.type: Easing.OutCubic } 
+                            PropertyAnimation { property: "z"; from: 100; to: 1; duration: 450 }
+                        }
+                        moveDisplaced: Transition { 
+                            NumberAnimation { properties: "y"; duration: 450; easing.type: Easing.OutCubic } 
+                        }
+
                         delegate: Rectangle {
                             id: procDelegate
-                            width: ListView.view.width
+                            anchors.left: parent ? parent.left : undefined
+                            anchors.right: parent ? parent.right : undefined
                             radius: Theme.cornerRadius
                             clip: true
                             readonly property bool isExpanded: processSection.expandedPid === model.pid
@@ -2107,9 +2133,11 @@ PluginComponent {
                                     }
                                 }
                             }
-                            Row {
-                                width: parent.width
+                            RowLayout {
+                                anchors.left: parent.left
+                                anchors.right: parent.right
                                 height: 48
+                                spacing: 0
 
                                 Item {
                                     width: processSection.nameW
@@ -2128,24 +2156,29 @@ PluginComponent {
                                         }
                                         
                                         StyledText { 
+                                            id: procNameTextExt
                                             text: model.name
                                             font.pixelSize: Theme.fontSizeSmall - 1
                                             font.weight: Font.Medium
                                             color: Theme.surfaceText
                                             elide: Text.ElideRight
-                                            width: Math.min(implicitWidth, processSection.nameW - 40)
-                                            anchors.verticalCenter: parent.verticalCenter 
+                                            Layout.fillWidth: true
+                                            Layout.maximumWidth: processSection.nameW - 40
+                                            Layout.alignment: Qt.AlignVCenter 
                                         }
                                     }
                                 }
 
-                                Row {
-                                    width: parent.width * 0.5 - 24
-                                    height: parent.height
+                                RowLayout {
+                                    id: statsRowExt
+                                    Layout.preferredWidth: parent.width * 0.5 - 24
+                                    Layout.fillHeight: true
+                                    spacing: 0
 
+                                    // GPU Stat
                                     Item {
-                                        width: processSection.statW
-                                        height: parent.height
+                                        Layout.preferredWidth: processSection.statW
+                                        Layout.fillHeight: true
                                         Rectangle {
                                             width: 70; height: 24; radius: Theme.cornerRadius
                                             anchors.centerIn: parent
@@ -2160,9 +2193,10 @@ PluginComponent {
                                         }
                                     }
 
+                                    // VRAM Stat
                                     Item {
-                                        width: processSection.statW
-                                        height: parent.height
+                                        Layout.preferredWidth: processSection.statW
+                                        Layout.fillHeight: true
                                         Rectangle {
                                             width: 70; height: 24; radius: Theme.cornerRadius
                                             anchors.centerIn: parent
@@ -2183,9 +2217,10 @@ PluginComponent {
                                         }
                                     }
 
+                                    // PID Stat
                                     Item {
-                                        width: processSection.statW
-                                        height: parent.height
+                                        Layout.preferredWidth: processSection.statW
+                                        Layout.fillHeight: true
                                         StyledText {
                                             anchors.centerIn: parent
                                             text: model.pid
@@ -2195,9 +2230,10 @@ PluginComponent {
                                     }
                                 }
 
+                                // Expand Icon
                                 Item {
-                                    width: 24
-                                    height: parent.height
+                                    Layout.preferredWidth: 24
+                                    Layout.fillHeight: true
                                     DankIcon {
                                         name: "expand_more"
                                         size: 18
@@ -2671,13 +2707,23 @@ PluginComponent {
     component DankContextMenu: Rectangle {
         id: menuRoot
         visible: false
-        width: 180
+        width: 190
         height: column.implicitHeight + Theme.spacingS * 2
-        color: Theme.surface
+        color: Theme.withAlpha(Theme.surfaceContainerHighest, Theme.popupTransparency)
         radius: Theme.cornerRadius
         z: 9999
-        border.color: Theme.withAlpha(Theme.surfaceVariantText, 0.12)
+        border.color: Theme.withAlpha(Theme.surfaceVariantText, 0.15)
         border.width: 1
+
+        layer.enabled: true
+        layer.effect: DropShadow {
+            transparentBorder: true
+            horizontalOffset: 0
+            verticalOffset: 6
+            radius: 16.0
+            samples: 32
+            color: Theme.withAlpha(Theme.shadowColor || "#000000", 0.4)
+        }
 
         property var targetProcess: null
         property bool showPid: true

@@ -68,22 +68,7 @@ PluginSettings {
                 }
             }
 
-            Row {
-                width: parent.width
-                spacing: Theme.spacingM
-                DankIcon { name: "visibility"; size: 22; anchors.verticalCenter: parent.verticalCenter; opacity: 0.8 }
-                SelectionSetting {
-                    width: parent.width - 22 - Theme.spacingM
-                    settingKey: "persistEmptyStates"
-                    label: "Persist Empty States"
-                    description: "Keeps charts, lists, and bars visible in the layout even when they contain no data."
-                    options: [
-                        { label: "Enabled", value: "enabled" },
-                        { label: "Disabled", value: "disabled" }
-                    ]
-                    defaultValue: "enabled"
-                }
-            }
+
         }
     }
 
