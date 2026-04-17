@@ -2445,6 +2445,9 @@ PluginComponent {
         readonly property real thickness: Math.max(4, Math.min(width, height) / 15)
         readonly property real glowExtra: thickness * 1.4
         readonly property real arcPadding: ((thickness + glowExtra) / 2) + 1
+        readonly property real glowStrokeWidth: thickness + glowExtra
+        readonly property real ringRadius: Math.max(0, (Math.min(width, height) / 2) - arcPadding)
+        readonly property real canvasOverflow: Math.max(0, (glowStrokeWidth / 2) - arcPadding + 1)
 
         readonly property real innerDiameter: width - (arcPadding + thickness + glowExtra) * 2
         readonly property real maxTextWidth: innerDiameter * 0.9
