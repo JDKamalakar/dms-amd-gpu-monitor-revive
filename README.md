@@ -28,10 +28,16 @@ The monitor adapts to your preferred layout with four distinct UI implementation
 
 | UI Mode | Description | Status |
 | :--- | :--- | :--- |
-| **DMS Extended** | Maximum data density with full process lists and charts. | <img width="756" height="836" alt="DMS_Extended" src="https://github.com/user-attachments/assets/c7248166-450a-4a7c-96ee-440832a0cb84" /> |
-| **DMS Standard** | The native material look—balanced and clean. | <img width="440" height="700" alt="DMS" src="https://github.com/user-attachments/assets/efd4342a-3464-4a94-b26d-78b8f42369ea" /> |
-| **Alternate** | A modern, high-contrast take on the monitoring panel. | <img width="430" height="780" alt="Alternative" src="https://github.com/user-attachments/assets/dd615692-ecb7-43fe-a497-198844105a79" /> |
-| **Legacy** | Same UI As OG dms-amg-gpu-monitor. | <img width="428" height="647" alt="Legacy" src="https://github.com/user-attachments/assets/1a80ae8a-aae8-4081-bd07-29612cdc52a9" /> |
+| **DMS Extended** | Maximum data density with full process lists and charts. | <img width="756" height="836" alt="DMS_Extended" src="assets/DMS_Extended.png" /> |
+| **DMS Standard** | The native material look—balanced and clean. | <img width="440" height="700" alt="DMS" src="assets/DMS.png" /> |
+| **Alternate** | A modern, high-contrast take on the monitoring panel. | <img width="430" height="780" alt="Alternative" src="assets/Alternative.png" /> |
+| **Legacy** | Same UI As OG dms-amg-gpu-monitor. | <img width="428" height="647" alt="Legacy" src="assets/Legacy.png" /> |
+
+---
+### ⚙️ Configuration
+| Settings UI |
+| :--- |
+| <img width="310" height="620" alt="Settings" src="assets/Settings.png" /> |
 
 ---
 

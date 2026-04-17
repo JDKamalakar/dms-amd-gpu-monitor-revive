@@ -1060,52 +1060,71 @@ PluginComponent {
 
             // Gauges row
             Item {
+                id: gaugeRowHost
                 width: parent.width
                 height: gaugesRow.height
-
                 readonly property real gaugeSize: Theme.fontSizeMedium * 6.5
+                readonly property real gaugePadding: Math.max(6, Math.round(gaugeSize * 0.08))
 
                 Row {
                     id: gaugesRow
                     anchors.horizontalCenter: parent.horizontalCenter
+                    anchors.verticalCenter: parent.verticalCenter
                     spacing: Theme.spacingM
 
-                    CircleGauge {
-                        width: parent.parent.gaugeSize
-                        height: parent.parent.gaugeSize
-                        value: root.gpuUsage / 100
-                        label: root.gpuUsage.toFixed(0) + "%"
-                        sublabel: "GPU"
-                        accentColor: root.getUsageColor(root.gpuUsage)
+                    Item {
+                        width: gaugeRowHost.gaugeSize + gaugeRowHost.gaugePadding * 2
+                        height: gaugeRowHost.gaugeSize + gaugeRowHost.gaugePadding * 2
+
+                        CircleGauge {
+                            anchors.centerIn: parent
+                            width: gaugeRowHost.gaugeSize
+                            height: gaugeRowHost.gaugeSize
+                            value: root.gpuUsage / 100
+                            label: root.gpuUsage.toFixed(0) + "%"
+                            sublabel: "GPU"
+                            accentColor: root.getUsageColor(root.gpuUsage)
+                        }
                     }
 
-                    CircleGauge {
-                        width: parent.parent.gaugeSize
-                        height: parent.parent.gaugeSize
-                        value: root.vramPercent / 100
-                        label: (root.vramUsed / 1024).toFixed(1) + " GiB"
-                        sublabel: "VRAM"
-                        detail: root.vramPercent.toFixed(0) + "%"
-                        accentColor: root.getUsageColor(root.vramPercent)
+                    Item {
+                        width: gaugeRowHost.gaugeSize + gaugeRowHost.gaugePadding * 2
+                        height: gaugeRowHost.gaugeSize + gaugeRowHost.gaugePadding * 2
+
+                        CircleGauge {
+                            anchors.centerIn: parent
+                            width: gaugeRowHost.gaugeSize
+                            height: gaugeRowHost.gaugeSize
+                            value: root.vramPercent / 100
+                            label: (root.vramUsed / 1024).toFixed(1) + " GiB"
+                            sublabel: "VRAM"
+                            detail: root.vramPercent.toFixed(0) + "%"
+                            accentColor: root.getUsageColor(root.vramPercent)
+                        }
                     }
 
-                    CircleGauge {
+                    Item {
                         visible: root.temperature > 0
-                        width: parent.parent.gaugeSize
-                        height: parent.parent.gaugeSize
-                        value: Math.min(1, root.temperature / 100)
-                        label: root.temperature + "°C"
-                        sublabel: "Temp"
-                        detail: root.powerUsage > 0 ? (root.powerUsage + "W") : ""
-                        accentColor: root.temperature > 85 ? Theme.tempDanger : (root.temperature > 70 ? Theme.tempWarning : Theme.info)
-                        detailColor: Theme.surfaceVariantText
+                        width: gaugeRowHost.gaugeSize + gaugeRowHost.gaugePadding * 2
+                        height: gaugeRowHost.gaugeSize + gaugeRowHost.gaugePadding * 2
+
+                        CircleGauge {
+                            anchors.centerIn: parent
+                            width: gaugeRowHost.gaugeSize
+                            height: gaugeRowHost.gaugeSize
+                            value: Math.min(1, root.temperature / 100)
+                            label: root.temperature + "°C"
+                            sublabel: "Temp"
+                            detail: root.powerUsage > 0 ? (root.powerUsage + "W") : ""
+                            accentColor: root.temperature > 85 ? Theme.tempDanger : (root.temperature > 70 ? Theme.tempWarning : Theme.info)
+                            detailColor: Theme.surfaceVariantText
+                        }
                     }
                 }
             }
 
             // Engine activity section
             Rectangle {
-                visible: root.gfxUsage > 0 || root.memUsage > 0 || root.mediaUsage > 0
                 width: parent.width
                 height: engineContent.height + Theme.spacingM * 2
                 radius: Theme.cornerRadius
@@ -1173,7 +1192,6 @@ PluginComponent {
 
             // Process list section
             Rectangle {
-                visible: root.gfxUsage > 0 || root.memUsage > 0 || root.mediaUsage > 0
                 width: parent.width
                 height: processContent.height + Theme.spacingM * 2
                 radius: Theme.cornerRadius
@@ -1286,15 +1304,19 @@ PluginComponent {
 
                                 // Process name column
                                 Item {
+                                    id: processNameCell
                                     width: parent.width - vramBadge.width - gfxBadge.width - cpuBadge.width - Theme.spacingS * 3
                                     height: parent.height
+                                    clip: true
 
                                     Row {
                                         anchors.left: parent.left
+                                        anchors.right: parent.right
                                         anchors.verticalCenter: parent.verticalCenter
                                         spacing: Theme.spacingS
 
                                         DankIcon {
+                                            id: processNameIcon
                                             name: "terminal"
                                             size: Theme.iconSize - 4
                                             color: Theme.surfaceText
@@ -1303,6 +1325,7 @@ PluginComponent {
                                         }
 
                                         Column {
+                                            width: Math.max(0, processNameCell.width - processNameIcon.width - Theme.spacingS)
                                             anchors.verticalCenter: parent.verticalCenter
 
                                             StyledText {
@@ -1312,7 +1335,7 @@ PluginComponent {
                                                 font.weight: Font.Medium
                                                 color: Theme.surfaceText
                                                 elide: Text.ElideRight
-                                                width: parent.parent.width - (Theme.iconSize - 4) - Theme.spacingS
+                                                width: parent.width
                                             }
                                         }
                                     }
@@ -2445,13 +2468,15 @@ PluginComponent {
 
         Canvas {
             id: glowCanvas
-            anchors.fill: parent
+            anchors.centerIn: parent
+            width: gaugeRoot.width + gaugeRoot.canvasOverflow * 2
+            height: gaugeRoot.height + gaugeRoot.canvasOverflow * 2
             onPaint: {
                 const ctx = getContext("2d");
                 ctx.reset();
                 const cx = width / 2;
                 const cy = height / 2;
-                const radius = (Math.min(width, height) / 2) - gaugeRoot.arcPadding;
+                const radius = gaugeRoot.ringRadius;
                 const startAngle = -Math.PI * 0.5;
                 const endAngle = Math.PI * 1.5;
 
@@ -2462,7 +2487,7 @@ PluginComponent {
                     ctx.beginPath();
                     ctx.arc(cx, cy, radius, startAngle, prog);
                     ctx.strokeStyle = Qt.rgba(gaugeRoot.accentColor.r, gaugeRoot.accentColor.g, gaugeRoot.accentColor.b, 0.2);
-                    ctx.lineWidth = gaugeRoot.thickness + gaugeRoot.glowExtra;
+                    ctx.lineWidth = gaugeRoot.glowStrokeWidth;
                     ctx.stroke();
                 }
             }
@@ -2480,13 +2505,15 @@ PluginComponent {
 
         Canvas {
             id: arcCanvas
-            anchors.fill: parent
+            anchors.centerIn: parent
+            width: gaugeRoot.width + gaugeRoot.canvasOverflow * 2
+            height: gaugeRoot.height + gaugeRoot.canvasOverflow * 2
             onPaint: {
                 const ctx = getContext("2d");
                 ctx.reset();
                 const cx = width / 2;
                 const cy = height / 2;
-                const radius = (Math.min(width, height) / 2) - gaugeRoot.arcPadding;
+                const radius = gaugeRoot.ringRadius;
                 const startAngle = -Math.PI * 0.5;
                 const endAngle = Math.PI * 1.5;
 
@@ -2855,4 +2882,3 @@ PluginComponent {
         }
     }
 }
-
