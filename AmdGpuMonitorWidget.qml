@@ -556,6 +556,16 @@ PluginComponent {
                 radius: 16
                 color: Theme.withAlpha(Theme.surfaceContainerHigh, Theme.popupTransparency)
                 
+                layer.enabled: true
+                layer.effect: DropShadow {
+                    transparentBorder: true
+                    horizontalOffset: 0
+                    verticalOffset: 3
+                    radius: 12.0
+                    samples: 24
+                    color: Theme.withAlpha(Theme.shadowColor || "#000000", 0.35)
+                }
+
                 Row {
                     anchors.fill: parent
                     anchors.leftMargin: Theme.spacingM
@@ -617,6 +627,16 @@ PluginComponent {
                     radius: 12
                     color: root.temperature > 80 ? Theme.withAlpha(Theme.errorHover, Theme.popupTransparency) : Theme.withAlpha(Theme.surfaceContainerHigh, Theme.popupTransparency)
 
+                    layer.enabled: true
+                    layer.effect: DropShadow {
+                        transparentBorder: true
+                        horizontalOffset: 0
+                        verticalOffset: 2
+                        radius: 8.0
+                        samples: 16
+                        color: Theme.withAlpha(Theme.shadowColor || "#000000", 0.3)
+                    }
+
                     Row {
                         anchors.centerIn: parent
                         spacing: Theme.spacingS
@@ -645,6 +665,16 @@ PluginComponent {
                     height: 48
                     radius: 12
                     color: Theme.withAlpha(Theme.surfaceContainerHigh, Theme.popupTransparency)
+
+                    layer.enabled: true
+                    layer.effect: DropShadow {
+                        transparentBorder: true
+                        horizontalOffset: 0
+                        verticalOffset: 2
+                        radius: 8.0
+                        samples: 16
+                        color: Theme.withAlpha(Theme.shadowColor || "#000000", 0.3)
+                    }
 
                     Row {
                         anchors.centerIn: parent
@@ -675,6 +705,16 @@ PluginComponent {
                 height: engineContent.height + Theme.spacingM * 2
                 radius: Theme.cornerRadius
                 color: Theme.withAlpha(Theme.surfaceContainerHigh, Theme.popupTransparency)
+
+                layer.enabled: true
+                layer.effect: DropShadow {
+                    transparentBorder: true
+                    horizontalOffset: 0
+                    verticalOffset: 3
+                    radius: 12.0
+                    samples: 24
+                    color: Theme.withAlpha(Theme.shadowColor || "#000000", 0.35)
+                }
 
                 Column {
                     id: engineContent
@@ -724,13 +764,25 @@ PluginComponent {
                         barColor: Theme.info
                     }
                 }
-            }            // Process list section (Synced with DMS)
+            }            
+            
+            // Process list section (Synced with DMS)
             Rectangle {
                 visible: root.gfxUsage > 0 || root.memUsage > 0 || root.mediaUsage > 0
                 width: parent.width
                 height: altProcessItems.height + Theme.spacingM * 2
                 radius: Theme.cornerRadius
                 color: Theme.withAlpha(Theme.surfaceContainerHigh, Theme.popupTransparency)
+
+                layer.enabled: true
+                layer.effect: DropShadow {
+                    transparentBorder: true
+                    horizontalOffset: 0
+                    verticalOffset: 3
+                    radius: 12.0
+                    samples: 24
+                    color: Theme.withAlpha(Theme.shadowColor || "#000000", 0.35)
+                }
 
                 Column {
                     id: altProcessItems
@@ -848,12 +900,13 @@ PluginComponent {
                                             anchors.verticalCenter: parent.verticalCenter
 
                                             StyledText {
+                                                id: altProcNameText
                                                 text: modelData.name
                                                 font.pixelSize: Theme.fontSizeSmall
                                                 font.weight: Font.Medium
                                                 color: Theme.surfaceText
                                                 elide: Text.ElideRight
-                                                width: Math.min(implicitWidth, 120)
+                                                width: parent.parent.width - (Theme.iconSize - 4) - Theme.spacingS
                                             }
                                         }
                                     }
@@ -973,6 +1026,16 @@ PluginComponent {
                 radius: 16
                 color: Theme.withAlpha(Theme.surfaceContainerHigh, Theme.popupTransparency)
                 
+                layer.enabled: true
+                layer.effect: DropShadow {
+                    transparentBorder: true
+                    horizontalOffset: 0
+                    verticalOffset: 3
+                    radius: 12.0
+                    samples: 24
+                    color: Theme.withAlpha(Theme.shadowColor || "#000000", 0.35)
+                }
+
                 Row {
                     anchors.fill: parent
                     anchors.leftMargin: Theme.spacingM
@@ -997,56 +1060,85 @@ PluginComponent {
 
             // Gauges row
             Item {
+                id: gaugeRowHost
                 width: parent.width
                 height: gaugesRow.height
-
                 readonly property real gaugeSize: Theme.fontSizeMedium * 6.5
+                readonly property real gaugePadding: Math.max(6, Math.round(gaugeSize * 0.08))
 
                 Row {
                     id: gaugesRow
                     anchors.horizontalCenter: parent.horizontalCenter
+                    anchors.verticalCenter: parent.verticalCenter
                     spacing: Theme.spacingM
 
-                    CircleGauge {
-                        width: parent.parent.gaugeSize
-                        height: parent.parent.gaugeSize
-                        value: root.gpuUsage / 100
-                        label: root.gpuUsage.toFixed(0) + "%"
-                        sublabel: "GPU"
-                        accentColor: root.getUsageColor(root.gpuUsage)
+                    Item {
+                        width: gaugeRowHost.gaugeSize + gaugeRowHost.gaugePadding * 2
+                        height: gaugeRowHost.gaugeSize + gaugeRowHost.gaugePadding * 2
+
+                        CircleGauge {
+                            anchors.centerIn: parent
+                            width: gaugeRowHost.gaugeSize
+                            height: gaugeRowHost.gaugeSize
+                            value: root.gpuUsage / 100
+                            label: root.gpuUsage.toFixed(0) + "%"
+                            sublabel: "GPU"
+                            accentColor: root.getUsageColor(root.gpuUsage)
+                        }
                     }
 
-                    CircleGauge {
-                        width: parent.parent.gaugeSize
-                        height: parent.parent.gaugeSize
-                        value: root.vramPercent / 100
-                        label: (root.vramUsed / 1024).toFixed(1) + " GiB"
-                        sublabel: "VRAM"
-                        detail: root.vramPercent.toFixed(0) + "%"
-                        accentColor: root.getUsageColor(root.vramPercent)
+                    Item {
+                        width: gaugeRowHost.gaugeSize + gaugeRowHost.gaugePadding * 2
+                        height: gaugeRowHost.gaugeSize + gaugeRowHost.gaugePadding * 2
+
+                        CircleGauge {
+                            anchors.centerIn: parent
+                            width: gaugeRowHost.gaugeSize
+                            height: gaugeRowHost.gaugeSize
+                            value: root.vramPercent / 100
+                            label: (root.vramUsed / 1024).toFixed(1) + " GiB"
+                            sublabel: "VRAM"
+                            detail: root.vramPercent.toFixed(0) + "%"
+                            accentColor: root.getUsageColor(root.vramPercent)
+                        }
                     }
 
-                    CircleGauge {
+                    Item {
                         visible: root.temperature > 0
-                        width: parent.parent.gaugeSize
-                        height: parent.parent.gaugeSize
-                        value: Math.min(1, root.temperature / 100)
-                        label: root.temperature + "°C"
-                        sublabel: "Temp"
-                        detail: root.powerUsage > 0 ? (root.powerUsage + "W") : ""
-                        accentColor: root.temperature > 85 ? Theme.tempDanger : (root.temperature > 70 ? Theme.tempWarning : Theme.info)
-                        detailColor: Theme.surfaceVariantText
+                        width: gaugeRowHost.gaugeSize + gaugeRowHost.gaugePadding * 2
+                        height: gaugeRowHost.gaugeSize + gaugeRowHost.gaugePadding * 2
+
+                        CircleGauge {
+                            anchors.centerIn: parent
+                            width: gaugeRowHost.gaugeSize
+                            height: gaugeRowHost.gaugeSize
+                            value: Math.min(1, root.temperature / 100)
+                            label: root.temperature + "°C"
+                            sublabel: "Temp"
+                            detail: root.powerUsage > 0 ? (root.powerUsage + "W") : ""
+                            accentColor: root.temperature > 85 ? Theme.tempDanger : (root.temperature > 70 ? Theme.tempWarning : Theme.info)
+                            detailColor: Theme.surfaceVariantText
+                        }
                     }
                 }
             }
 
             // Engine activity section
             Rectangle {
-                visible: root.gfxUsage > 0 || root.memUsage > 0 || root.mediaUsage > 0
                 width: parent.width
                 height: engineContent.height + Theme.spacingM * 2
                 radius: Theme.cornerRadius
                 color: Theme.withAlpha(Theme.surfaceContainerHigh, Theme.popupTransparency)
+
+                layer.enabled: true
+                layer.effect: DropShadow {
+                    transparentBorder: true
+                    horizontalOffset: 0
+                    verticalOffset: 3
+                    radius: 12.0
+                    samples: 24
+                    color: Theme.withAlpha(Theme.shadowColor || "#000000", 0.35)
+                }
 
                 Column {
                     id: engineContent
@@ -1100,11 +1192,20 @@ PluginComponent {
 
             // Process list section
             Rectangle {
-                visible: root.gfxUsage > 0 || root.memUsage > 0 || root.mediaUsage > 0
                 width: parent.width
                 height: processContent.height + Theme.spacingM * 2
                 radius: Theme.cornerRadius
                 color: Theme.withAlpha(Theme.surfaceContainerHigh, Theme.popupTransparency)
+
+                layer.enabled: true
+                layer.effect: DropShadow {
+                    transparentBorder: true
+                    horizontalOffset: 0
+                    verticalOffset: 3
+                    radius: 12.0
+                    samples: 24
+                    color: Theme.withAlpha(Theme.shadowColor || "#000000", 0.35)
+                }
 
                 Column {
                     id: processContent
@@ -1203,15 +1304,19 @@ PluginComponent {
 
                                 // Process name column
                                 Item {
+                                    id: processNameCell
                                     width: parent.width - vramBadge.width - gfxBadge.width - cpuBadge.width - Theme.spacingS * 3
                                     height: parent.height
+                                    clip: true
 
                                     Row {
                                         anchors.left: parent.left
+                                        anchors.right: parent.right
                                         anchors.verticalCenter: parent.verticalCenter
                                         spacing: Theme.spacingS
 
                                         DankIcon {
+                                            id: processNameIcon
                                             name: "terminal"
                                             size: Theme.iconSize - 4
                                             color: Theme.surfaceText
@@ -1220,15 +1325,17 @@ PluginComponent {
                                         }
 
                                         Column {
+                                            width: Math.max(0, processNameCell.width - processNameIcon.width - Theme.spacingS)
                                             anchors.verticalCenter: parent.verticalCenter
 
                                             StyledText {
+                                                id: dmsProcNameText
                                                 text: modelData.name
                                                 font.pixelSize: Theme.fontSizeSmall
                                                 font.weight: Font.Medium
                                                 color: Theme.surfaceText
                                                 elide: Text.ElideRight
-                                                width: Math.min(implicitWidth, 120)
+                                                width: parent.width
                                             }
                                         }
                                     }
@@ -1544,6 +1651,16 @@ PluginComponent {
                 radius: Theme.cornerRadius
                 color: Theme.withAlpha(Theme.surfaceContainerHigh, Theme.popupTransparency)
 
+                layer.enabled: true
+                layer.effect: DropShadow {
+                    transparentBorder: true
+                    horizontalOffset: 0
+                    verticalOffset: 3
+                    radius: 12.0
+                    samples: 24
+                    color: Theme.withAlpha(Theme.shadowColor || "#000000", 0.35)
+                }
+
                 Column {
                     id: engineContent
                     anchors.left: parent.left
@@ -1572,6 +1689,16 @@ PluginComponent {
                 radius: Theme.cornerRadius
                 color: Theme.withAlpha(Theme.surfaceContainerHigh, Theme.popupTransparency)
                 
+                layer.enabled: true
+                layer.effect: DropShadow {
+                    transparentBorder: true
+                    horizontalOffset: 0
+                    verticalOffset: 3
+                    radius: 12.0
+                    samples: 24
+                    color: Theme.withAlpha(Theme.shadowColor || "#000000", 0.35)
+                }
+
                 FileView { id: cmdViewExt; path: "/proc/" + processSection.expandedPid + "/cmdline" }
                 FileView { id: statViewExt; path: "/proc/" + processSection.expandedPid + "/status" }
                 FileView { id: memInfoView; path: "/proc/meminfo" }
@@ -1590,31 +1717,78 @@ PluginComponent {
 
                 signal triggerRecalc()
 
-                onSortColChanged: triggerRecalc()
-                onSortAscChanged: triggerRecalc()
-                onFilterModeChanged: triggerRecalc()
-                onSearchTextChanged: triggerRecalc()
+                onSortColChanged: syncData()
+                onSortAscChanged: syncData()
+                onFilterModeChanged: syncData()
+                onSearchTextChanged: syncData()
 
                 ListModel { id: stableModel }
 
+                function sortProcesses(pList) {
+                    if (!pList) return [];
+                    return pList.sort((a, b) => {
+                        let valA, valB;
+                        if (processSection.sortCol === "name") {
+                            valA = a.name.toLowerCase();
+                            valB = b.name.toLowerCase();
+                        } else if (processSection.sortCol === "gpu") {
+                            valA = a.gfx;
+                            valB = b.gfx;
+                        } else if (processSection.sortCol === "vram") {
+                            valA = a.vram * (a.vramUnit === "GiB" ? 1024 : 1);
+                            valB = b.vram * (b.vramUnit === "GiB" ? 1024 : 1);
+                        } else if (processSection.sortCol === "pid") {
+                            valA = a.pid;
+                            valB = b.pid;
+                        }
+
+                        let res = 0;
+                        if (valA < valB) res = -1;
+                        else if (valA > valB) res = 1;
+                        
+                        return processSection.sortAsc ? res : -res;
+                    });
+                }
+
                 function syncData() {
-                    let pList = root.processes || [];
+                    let rawList = root.processes || [];
+                    
+                    // 1. FILTER & SEARCH
+                    let systemProcs = ["xorg", "xwayland", "wayland", "kwin", "kwin_wayland", "kwin_x11", "niri", "hyprland", "plasmashell", "sddm", "gdm", "systemd"];
+                    let filteredList = rawList.filter(p => {
+                        let isSys = systemProcs.some(sys => p.name.toLowerCase().includes(sys));
+                        let mFilter = processSection.filterMode === 0 || (processSection.filterMode === 1 && !isSys) || (processSection.filterMode === 2 && isSys);
+                        let mSearch = processSection.searchText === "" || p.name.toLowerCase().includes(processSection.searchText.toLowerCase()) || p.pid.toString().includes(processSection.searchText);
+                        return mFilter && mSearch;
+                    });
+
+                    // 2. SORT
+                    let sortedList = sortProcesses(filteredList);
+                    processSection.matchCount = sortedList.length;
+
+                    // 3. EFFICIENT SYNC (Maintain identity for animations)
+                    // Mark existing
                     for(let i=0; i<stableModel.count; i++) stableModel.setProperty(i, "visited", false);
                     
-                    for(let i=0; i<pList.length; i++) {
-                        let p = pList[i];
-                        let found = false;
+                    for(let i=0; i<sortedList.length; i++) {
+                        let p = sortedList[i];
+                        let foundIdx = -1;
                         for(let j=0; j<stableModel.count; j++) {
                             if(stableModel.get(j).pid === p.pid) {
-                                stableModel.setProperty(j, "gfx", p.gfx);
-                                stableModel.setProperty(j, "vram", p.vram);
-                                stableModel.setProperty(j, "visited", true);
-                                found = true;
+                                foundIdx = j;
                                 break;
                             }
                         }
-                        if(!found) {
-                            stableModel.append({
+
+                        if(foundIdx !== -1) {
+                            stableModel.setProperty(foundIdx, "gfx", p.gfx);
+                            stableModel.setProperty(foundIdx, "vram", p.vram);
+                            stableModel.setProperty(foundIdx, "visited", true);
+                            if (foundIdx !== i) {
+                                stableModel.move(foundIdx, i, 1);
+                            }
+                        } else {
+                            stableModel.insert(i, {
                                 name: p.name,
                                 pid: p.pid,
                                 vram: p.vram,
@@ -1625,21 +1799,10 @@ PluginComponent {
                         }
                     }
                     
+                    // Remove unvisited
                     for(let i=stableModel.count-1; i>=0; i--) {
                         if(stableModel.get(i).visited === false) stableModel.remove(i);
                     }
-                    
-                    let count = 0;
-                    let systemProcs = ["xorg", "xwayland", "wayland", "kwin", "kwin_wayland", "kwin_x11", "niri", "hyprland", "plasmashell", "sddm", "gdm", "systemd"];
-                    for(let i=0; i<stableModel.count; i++) {
-                        let p = stableModel.get(i);
-                        let isSys = systemProcs.some(sys => p.name.toLowerCase().includes(sys));
-                        let mFilter = processSection.filterMode === 0 || (processSection.filterMode === 1 && !isSys) || (processSection.filterMode === 2 && isSys);
-                        let mSearch = processSection.searchText === "" || p.name.toLowerCase().includes(processSection.searchText.toLowerCase()) || p.pid.toString().includes(processSection.searchText);
-                        if (mFilter && mSearch) count++;
-                    }
-                    processSection.matchCount = count;
-                    processSection.triggerRecalc();
                 }
 
                 Connections {
@@ -1716,7 +1879,9 @@ PluginComponent {
                                         if (processSection.sortCol === "name") processSection.sortAsc = !processSection.sortAsc;
                                         else { processSection.sortCol = "name"; processSection.sortAsc = true; }
                                     }
+                                    onPressed: (m) => nameRipple.trigger(m.x, m.y)
                                 }
+                                DankRipple { id: nameRipple; anchors.fill: parent; cornerRadius: Theme.cornerRadius }
                                 Row {
                                     anchors.left: parent.left
                                     anchors.leftMargin: Theme.spacingS
@@ -1773,7 +1938,9 @@ PluginComponent {
                                             if (processSection.sortCol === "gpu") processSection.sortAsc = !processSection.sortAsc;
                                             else { processSection.sortCol = "gpu"; processSection.sortAsc = false; }
                                         }
+                                        onPressed: (m) => gpuRipple.trigger(m.x, m.y)
                                     }
+                                    DankRipple { id: gpuRipple; anchors.fill: parent; cornerRadius: Theme.cornerRadius }
                                     Row {
                                         anchors.centerIn: parent
                                         spacing: 6
@@ -1822,7 +1989,9 @@ PluginComponent {
                                             if (processSection.sortCol === "vram") processSection.sortAsc = !processSection.sortAsc;
                                             else { processSection.sortCol = "vram"; processSection.sortAsc = false; }
                                         }
+                                        onPressed: (m) => vramRipple.trigger(m.x, m.y)
                                     }
+                                    DankRipple { id: vramRipple; anchors.fill: parent; cornerRadius: Theme.cornerRadius }
                                     Row {
                                         anchors.centerIn: parent
                                         spacing: 6
@@ -1871,7 +2040,9 @@ PluginComponent {
                                             if (processSection.sortCol === "pid") processSection.sortAsc = !processSection.sortAsc;
                                             else { processSection.sortCol = "pid"; processSection.sortAsc = true; }
                                         }
+                                        onPressed: (m) => pidRipple.trigger(m.x, m.y)
                                     }
+                                    DankRipple { id: pidRipple; anchors.fill: parent; cornerRadius: Theme.cornerRadius }
                                     Row {
                                         anchors.centerIn: parent
                                         spacing: 6
@@ -1915,18 +2086,38 @@ PluginComponent {
                         spacing: 2
                         boundsBehavior: Flickable.StopAtBounds
 
+                        add: Transition { 
+                            NumberAnimation { property: "y"; from: 48; duration: 400; easing.type: Easing.OutBack } 
+                            NumberAnimation { properties: "opacity,scale"; from: 0; to: 1; duration: 300; easing.type: Easing.OutCubic } 
+                        }
+                        remove: Transition { 
+                            NumberAnimation { property: "y"; to: 48; duration: 300; easing.type: Easing.InBack } 
+                            NumberAnimation { properties: "opacity,scale"; to: 0; duration: 250 } 
+                        }
+                        displaced: Transition { 
+                            NumberAnimation { properties: "y"; duration: 450; easing.type: Easing.OutCubic } 
+                        }
+                        move: Transition { 
+                            NumberAnimation { properties: "y"; duration: 450; easing.type: Easing.OutCubic } 
+                            PropertyAnimation { property: "z"; from: 100; to: 1; duration: 450 }
+                        }
+                        moveDisplaced: Transition { 
+                            NumberAnimation { properties: "y"; duration: 450; easing.type: Easing.OutCubic } 
+                        }
+
                         delegate: Rectangle {
                             id: procDelegate
-                            width: ListView.view.width
+                            anchors.left: parent ? parent.left : undefined
+                            anchors.right: parent ? parent.right : undefined
                             radius: Theme.cornerRadius
                             clip: true
                             readonly property bool isExpanded: processSection.expandedPid === model.pid
                             
 
                             // Match official DMS height logic
-                            height: isMatch ? (isExpanded ? (48 + expandedRect.height + Theme.spacingXS) : 48) : 0
-                            opacity: isMatch ? 1 : 0
-                            visible: height > 0
+                            height: isExpanded ? (48 + expandedRect.height + Theme.spacingXS) : 48
+                            opacity: 1
+                            visible: true
 
                             Behavior on height { NumberAnimation { duration: Theme.shortDuration; easing.type: Theme.standardEasing } }
                             Behavior on opacity { NumberAnimation { duration: Theme.shortDuration; easing.type: Theme.standardEasing } }
@@ -1943,67 +2134,7 @@ PluginComponent {
 
                             DankRipple { id: extRipple; cornerRadius: parent.radius }
 
-                            property int visualIndex: -1
-                            property bool isMatch: false
 
-                            function computeRank() {
-                                let myP = stableModel.get(index);
-                                if (!myP) return;
-
-                                let systemProcs = ["xorg", "xwayland", "wayland", "kwin", "kwin_wayland", "kwin_x11", "niri", "hyprland", "plasmashell", "sddm", "gdm", "systemd"];
-                                let myIsSys = systemProcs.some(sys => myP.name.toLowerCase().includes(sys));
-                                let myMatchF = processSection.filterMode === 0 || (processSection.filterMode === 1 && !myIsSys) || (processSection.filterMode === 2 && myIsSys);
-                                let myMatchS = processSection.searchText === "" || myP.name.toLowerCase().includes(processSection.searchText.toLowerCase()) || myP.pid.toString().includes(processSection.searchText);
-                                
-                                isMatch = myMatchF && myMatchS;
-                                
-                                if (!isMatch) {
-                                    visualIndex = -1;
-                                    return;
-                                }
-
-                                let rank = 0;
-                                let myVal;
-                                if (processSection.sortCol === "name") myVal = myP.name.toLowerCase();
-                                else if (processSection.sortCol === "gpu") myVal = myP.gfx;
-                                else if (processSection.sortCol === "vram") myVal = myP.vram * (myP.vramUnit === "GiB" ? 1024 : 1);
-                                else if (processSection.sortCol === "pid") myVal = myP.pid;
-
-                                for (let i = 0; i < stableModel.count; i++) {
-                                    if (i === index) continue;
-                                    let otherP = stableModel.get(i);
-                                    
-                                    let otherIsSys = systemProcs.some(sys => otherP.name.toLowerCase().includes(sys));
-                                    let otherMatchF = processSection.filterMode === 0 || (processSection.filterMode === 1 && !otherIsSys) || (processSection.filterMode === 2 && otherIsSys);
-                                    let otherMatchS = processSection.searchText === "" || otherP.name.toLowerCase().includes(processSection.searchText.toLowerCase()) || otherP.pid.toString().includes(processSection.searchText);
-                                    
-                                    if (otherMatchF && otherMatchS) {
-                                        let otherVal;
-                                        if (processSection.sortCol === "name") otherVal = otherP.name.toLowerCase();
-                                        else if (processSection.sortCol === "gpu") otherVal = otherP.gfx;
-                                        else if (processSection.sortCol === "vram") otherVal = otherP.vram * (otherP.vramUnit === "GiB" ? 1024 : 1);
-                                        else if (processSection.sortCol === "pid") otherVal = otherP.pid;
-
-                                        let isSmaller;
-                                        if (processSection.sortCol === "name") isSmaller = myVal < otherVal;
-                                        else isSmaller = myVal > otherVal;
-
-                                        if (processSection.sortAsc) isSmaller = !isSmaller;
-
-                                        if (isSmaller) rank++;
-                                        else if (myVal === otherVal && index > i) rank++; 
-                                    }
-                                }
-                                visualIndex = rank;
-                            }
-
-                            Connections {
-                                target: processSection
-                                function onTriggerRecalc() { computeRank(); }
-                            }
-                            Component.onCompleted: {
-                                computeRank();
-                            }
 
                             MouseArea {
                                 id: procMouseArea
@@ -2025,9 +2156,11 @@ PluginComponent {
                                     }
                                 }
                             }
-                            Row {
-                                width: parent.width
+                            RowLayout {
+                                anchors.left: parent.left
+                                anchors.right: parent.right
                                 height: 48
+                                spacing: 0
 
                                 Item {
                                     width: processSection.nameW
@@ -2046,24 +2179,29 @@ PluginComponent {
                                         }
                                         
                                         StyledText { 
+                                            id: procNameTextExt
                                             text: model.name
                                             font.pixelSize: Theme.fontSizeSmall - 1
                                             font.weight: Font.Medium
                                             color: Theme.surfaceText
                                             elide: Text.ElideRight
-                                            width: Math.min(implicitWidth, processSection.nameW - 40)
-                                            anchors.verticalCenter: parent.verticalCenter 
+                                            Layout.fillWidth: true
+                                            Layout.maximumWidth: processSection.nameW - 40
+                                            Layout.alignment: Qt.AlignVCenter 
                                         }
                                     }
                                 }
 
-                                Row {
-                                    width: parent.width * 0.5 - 24
-                                    height: parent.height
+                                RowLayout {
+                                    id: statsRowExt
+                                    Layout.preferredWidth: parent.width * 0.5 - 24
+                                    Layout.fillHeight: true
+                                    spacing: 0
 
+                                    // GPU Stat
                                     Item {
-                                        width: processSection.statW
-                                        height: parent.height
+                                        Layout.preferredWidth: processSection.statW
+                                        Layout.fillHeight: true
                                         Rectangle {
                                             width: 70; height: 24; radius: Theme.cornerRadius
                                             anchors.centerIn: parent
@@ -2078,9 +2216,10 @@ PluginComponent {
                                         }
                                     }
 
+                                    // VRAM Stat
                                     Item {
-                                        width: processSection.statW
-                                        height: parent.height
+                                        Layout.preferredWidth: processSection.statW
+                                        Layout.fillHeight: true
                                         Rectangle {
                                             width: 70; height: 24; radius: Theme.cornerRadius
                                             anchors.centerIn: parent
@@ -2101,9 +2240,10 @@ PluginComponent {
                                         }
                                     }
 
+                                    // PID Stat
                                     Item {
-                                        width: processSection.statW
-                                        height: parent.height
+                                        Layout.preferredWidth: processSection.statW
+                                        Layout.fillHeight: true
                                         StyledText {
                                             anchors.centerIn: parent
                                             text: model.pid
@@ -2113,9 +2253,10 @@ PluginComponent {
                                     }
                                 }
 
+                                // Expand Icon
                                 Item {
-                                    width: 24
-                                    height: parent.height
+                                    Layout.preferredWidth: 24
+                                    Layout.fillHeight: true
                                     DankIcon {
                                         name: "expand_more"
                                         size: 18
@@ -2303,7 +2444,10 @@ PluginComponent {
 
         readonly property real thickness: Math.max(4, Math.min(width, height) / 15)
         readonly property real glowExtra: thickness * 1.4
-        readonly property real arcPadding: thickness / 1.3
+        readonly property real arcPadding: ((thickness + glowExtra) / 2) + 1
+        readonly property real glowStrokeWidth: thickness + glowExtra
+        readonly property real ringRadius: Math.max(0, (Math.min(width, height) / 2) - arcPadding)
+        readonly property real canvasOverflow: Math.max(0, (glowStrokeWidth / 2) - arcPadding + 1)
 
         readonly property real innerDiameter: width - (arcPadding + thickness + glowExtra) * 2
         readonly property real maxTextWidth: innerDiameter * 0.9
@@ -2327,13 +2471,15 @@ PluginComponent {
 
         Canvas {
             id: glowCanvas
-            anchors.fill: parent
+            anchors.centerIn: parent
+            width: gaugeRoot.width + gaugeRoot.canvasOverflow * 2
+            height: gaugeRoot.height + gaugeRoot.canvasOverflow * 2
             onPaint: {
                 const ctx = getContext("2d");
                 ctx.reset();
                 const cx = width / 2;
                 const cy = height / 2;
-                const radius = (Math.min(width, height) / 2) - gaugeRoot.arcPadding;
+                const radius = gaugeRoot.ringRadius;
                 const startAngle = -Math.PI * 0.5;
                 const endAngle = Math.PI * 1.5;
 
@@ -2344,7 +2490,7 @@ PluginComponent {
                     ctx.beginPath();
                     ctx.arc(cx, cy, radius, startAngle, prog);
                     ctx.strokeStyle = Qt.rgba(gaugeRoot.accentColor.r, gaugeRoot.accentColor.g, gaugeRoot.accentColor.b, 0.2);
-                    ctx.lineWidth = gaugeRoot.thickness + gaugeRoot.glowExtra;
+                    ctx.lineWidth = gaugeRoot.glowStrokeWidth;
                     ctx.stroke();
                 }
             }
@@ -2362,13 +2508,15 @@ PluginComponent {
 
         Canvas {
             id: arcCanvas
-            anchors.fill: parent
+            anchors.centerIn: parent
+            width: gaugeRoot.width + gaugeRoot.canvasOverflow * 2
+            height: gaugeRoot.height + gaugeRoot.canvasOverflow * 2
             onPaint: {
                 const ctx = getContext("2d");
                 ctx.reset();
                 const cx = width / 2;
                 const cy = height / 2;
-                const radius = (Math.min(width, height) / 2) - gaugeRoot.arcPadding;
+                const radius = gaugeRoot.ringRadius;
                 const startAngle = -Math.PI * 0.5;
                 const endAngle = Math.PI * 1.5;
 
@@ -2438,6 +2586,16 @@ PluginComponent {
         height: 100
         radius: 16
         color: Theme.surfaceContainerHigh
+
+        layer.enabled: true
+        layer.effect: DropShadow {
+            transparentBorder: true
+            horizontalOffset: 0
+            verticalOffset: 3
+            radius: 12.0
+            samples: 24
+            color: Theme.withAlpha(Theme.shadowColor || "#000000", 0.35)
+        }
 
         property string iconName: ""
         property color iconColor: Theme.primary
@@ -2579,13 +2737,23 @@ PluginComponent {
     component DankContextMenu: Rectangle {
         id: menuRoot
         visible: false
-        width: 180
+        width: 190
         height: column.implicitHeight + Theme.spacingS * 2
-        color: Theme.surface
+        color: Theme.withAlpha(Theme.surfaceContainerHighest, Theme.popupTransparency)
         radius: Theme.cornerRadius
         z: 9999
-        border.color: Theme.withAlpha(Theme.surfaceVariantText, 0.12)
+        border.color: Theme.withAlpha(Theme.surfaceVariantText, 0.15)
         border.width: 1
+
+        layer.enabled: true
+        layer.effect: DropShadow {
+            transparentBorder: true
+            horizontalOffset: 0
+            verticalOffset: 6
+            radius: 16.0
+            samples: 32
+            color: Theme.withAlpha(Theme.shadowColor || "#000000", 0.4)
+        }
 
         property var targetProcess: null
         property bool showPid: true
@@ -2717,4 +2885,3 @@ PluginComponent {
         }
     }
 }
-

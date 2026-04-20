@@ -3,7 +3,7 @@
     "name": "AMD GPU Monitor Revive",
     "description": "Monitor AMD GPU usage, VRAM, temperature, power consumption and process usage with updated UI.",
     "category": "monitoring",
-    "version": "1.2.0",
+    "version": "1.2.4",
     "author": "JDKamalakar.",
     "icon": "dashboard",
     "type": "widget",
