@@ -1,89 +1,101 @@
-# <img width="32" height="28" alt="image" src="https://github.com/user-attachments/assets/c94111c7-f60f-48ab-ae07-a7e912a79184" /> AMD GPU Monitor
+<div align="center">
 
-[![DMS Version](https://img.shields.io/badge/DMS-Compatible-purple.svg)](https://github.com/Dank-Material-Shell)
-[![Driver](https://img.shields.io/badge/Driver-AMDGPU-orange.svg)](https://www.kernel.org/doc/html/latest/gpu/amdgpu.html)
-[![Backend](https://img.shields.io/badge/Backend-amdgpu__top-blue.svg)](https://github.com/Umio-Yasuno/amdgpu_top)
-[![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://github.com/JDKamalakar/DMS-AMD_GPU_Monitor_Revive/graphs/commit-activity)
+<a href="https://github.com/JDKamalakar/DMS-AMD_GPU_Monitor_Revive">
+    <img src="https://github.com/user-attachments/assets/c94111c7-f60f-48ab-ae07-a7e912a79184" alt="AMD GPU Monitor logo" title="AMD GPU Monitor logo" width="80"/>
+</a>
 
-A high-performance real-time monitoring suite for AMD GPUs, specifically engineered for the **Dank Material Shell** (DMS) environment. Track utilization, VRAM, thermals, and per-process metrics with native material styling.
+# [DMS-AMD_GPU_Monitor_Revive](#)
 
-> [!TIP]
-> This plugin supports multiple display modes including **Legacy**, **Alternate**, **DMS Standard**, and **DMS Extended** to fit any desktop workflow.
+### Real-Time GPU Performance
+High-performance monitoring suite for AMD GPUs in the Dank Material Shell – track vitals and metrics with precision.
 
----
+[![DMS Compatible](https://img.shields.io/badge/DMS-Compatible-purple.svg?labelColor=27303D)](https://github.com/Dank-Material-Shell)
+[![Driver](https://img.shields.io/badge/Driver-AMDGPU-orange.svg?labelColor=27303D)](https://www.kernel.org/doc/html/latest/gpu/amdgpu.html)
+[![Backend](https://img.shields.io/badge/Backend-amdgpu__top-blue.svg?labelColor=27303D)](https://github.com/Umio-Yasuno/amdgpu_top)
+[![Maintenance Status](https://img.shields.io/badge/Status-Maintained-green.svg?labelColor=27303D&color=946300)](https://github.com/JDKamalakar/DMS-AMD_GPU_Monitor_Revive/graphs/commit-activity)
 
-## ✨ Features
+## Download
 
-* **📊 Comprehensive Monitoring:** Real-time GFX, Memory, and Media Engine usage.
-* **🌡️ Thermal & Power:** Live tracking of edge/junction temperatures and socket power draw.
-* **💾 VRAM Insights:** Detailed capacity display and allocation statistics.
-* **🔍 Per-Process Metrics:** Identify which applications are consuming VRAM, GFX, and CPU cycles.
-* **🚨 Smart Indicators:** Color-coded warnings (Normal/Warning/Critical) based on configurable thresholds.
+[![DMS Plugin Gallery](https://img.shields.io/badge/DMS-Plugin%20Gallery-06599d?style=flat-square&logo=linux&logoColor=white)](https://danklinux.com/plugins)
 
----
 
-## 📸 Interface Variations
+*Requires Dank Material Shell (DMS) 1.0 or higher.*
 
-The monitor adapts to your preferred layout with four distinct UI implementations:
+## Features
 
-| UI Mode | Description | Status |
-| :--- | :--- | :--- |
-| **DMS Extended** | Maximum data density with full process lists and charts. | <img width="756" height="836" alt="DMS_Extended" src="assets/DMS_Extended.png" /> |
-| **DMS Standard** | The native material look—balanced and clean. | <img width="440" height="700" alt="DMS" src="assets/DMS.png" /> |
-| **Alternate** | A modern, high-contrast take on the monitoring panel. | <img width="430" height="780" alt="Alternative" src="assets/Alternative.png" /> |
-| **Legacy** | Same UI As OG dms-amg-gpu-monitor. | <img width="428" height="647" alt="Legacy" src="assets/Legacy.png" /> |
+<div align="left">
 
----
-### ⚙️ Configuration
-| Settings UI |
-| :--- |
-| <img width="310" height="620" alt="Settings" src="assets/Settings.png" /> |
+* **📊 Comprehensive Monitoring**: Real-time tracking of GFX, Memory, and Media Engine utilization.
+* **🌡️ Thermal & Power**: Live edge/junction temperature data and socket power consumption metrics.
+* **💾 VRAM Insights**: Detailed capacity visualization and granular allocation statistics.
+* **🔍 Per-Process Metrics**: Identify VRAM, GFX, and CPU consumption on a per-application basis.
+* **🚨 Smart Indicators**: Visual alerts with configurable Normal/Warning/Critical thresholds.
+* **✨ Dynamic Layouts**: Supports Legacy, Alternate, DMS Standard, and DMS Extended modes.
 
----
+</div>
 
-## 🛠️ Installation
+## Interface
 
-### 📋 1. Prerequisites
-Ensure you have the following installed on your system before proceeding:
+<div align="center">
+  <img src="assets/DMS_Extended.png" width="45%" />
+  <img src="assets/DMS.png" width="45%" />
+</div>
+
+<div align="center">
+  <img src="assets/Alternative.png" width="45%" />
+  <img src="assets/Legacy.png" width="45%" />
+</div>
+
+## Configuration
+
+<div align="center">
+  <img src="assets/Settings.png" width="80%" />
+</div>
+
+## Installation
+
+<div align="left">
+
+### 1. Prerequisites
+Ensure you have the following installed:
 * **Driver:** AMDGPU (Standard Linux Kernel driver)
-* **Shell:** QuickShell & DankMaterialShell
 * **Backend:** `amdgpu_top`
 
 ```bash
-# Install backend (Arch Linux example)
+# Arch Linux example
 yay -S amdgpu_top
 ```
 
-### 🚀 2. Plugin Installation
+### 2. Plugin Installation
+* **Recommended:** Use the **DMS Plugin Manager** in settings.
+* **Manual:** Clone this repo into your DMS plugins folder:
+```bash
+git clone https://github.com/JDKamalakar/DMS-AMD_GPU_Monitor_Revive.git
+```
 
-#### 🚀 Recommended: DMS Plugin Manager
-The easiest way to install and stay updated:
-1. Open your **DMS Settings**.
-2. Navigate to the **Plugin Manager** tab.
-3. Search for `DMS-AMD_GPU_Monitor_Revive` and click **Install**.
-4. Alternatively, browse the [Dank Linux Plugin Gallery](https://danklinux.com/plugins#/).
+</div>
 
-#### 🛠️ Manual Installation
-For developers or users who want the latest edge builds:
-1. Clone this repository into your DMS extensions/plugins folder:
-   ```bash
-   git clone [https://github.com/JDKamalakar/DMS-AMD_GPU_Monitor_Revive.git](https://github.com/JDKamalakar/DMS-AMD_GPU_Monitor_Revive.git)
+## Contributing
 
----
+Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
 
-### 🐛 Feedback & Contributions
+Before reporting a new issue, take a look at the [opened issues](https://github.com/JDKamalakar/DMS-AMD_GPU_Monitor_Revive/issues).
 
-Found a bug or have a feature request? Let’s make this better together.
 
-* **Report Issues:** [GitHub Issues](https://github.com/JDKamalakar/DMS-AMD_GPU_Monitor_Revive/issues/new/choose)
-* **Contributions:** Pull requests are welcome! Please ensure your code follows the shell's design guidelines.
+### Credits
 
----
+Built with ❤️ for the [Dank Material Shell](https://github.com/DankMaterialShell) community. Uses [amdgpu_top](https://github.com/Umio-Yasuno/amdgpu_top).
 
-## 📜 License
+<a href="https://github.com/JDKamalakar/DMS-AMD_GPU_Monitor_Revive/graphs/contributors">
+    <img src="https://contrib.rocks/image?repo=JDKamalakar/DMS-AMD_GPU_Monitor_Revive" alt="Contributors" title="Contributors" width="100"/>
+</a>
+
+### Disclaimer
+
+This application is an independent utility for Dank Material Shell.
+
+### 📜 License
 
 Part of DankMaterialShell. Check the main repository for license information.
 
-## 🤝 Credits
-
-Built for [DankMaterialShell](https://github.com/DankMaterialShell) • Uses [amdgpu_top](https://github.com/Umio-Yasuno/amdgpu_top)
+</div>
